@@ -1,3 +1,6 @@
+"use client";
+
+import { useRef, useState } from "react";
 import Link from "next/link";
 import AppShell from "@/components/AppShell";
 import D3LineChart from "@/components/D3LineChart";
@@ -11,6 +14,9 @@ function classificationTone(name) {
 }
 
 export default function MonitoringPage() {
+  const fileInputRef = useRef(null);
+  const [selectedFile, setSelectedFile] = useState("");
+
   return (
     <AppShell
       eyebrow="Step 2: Monitoring & Ingestion"
@@ -18,12 +24,40 @@ export default function MonitoringPage() {
       description="Upload log packages for normalization and heuristic pre-filtering. TrustSphere handles multi-source ingestion including Sysmon, Azure AD, and cloud events."
       actions={
         <>
-          <button className="secondary-button" type="button">Upload Logs</button>
+          <button
+            className="secondary-button"
+            onClick={() => fileInputRef.current?.click()}
+            type="button"
+          >
+            Upload Logs
+          </button>
+          <input
+            accept=".json,.csv,application/json,text/csv"
+            className="hidden-file-input"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              setSelectedFile(file ? file.name : "");
+            }}
+            ref={fileInputRef}
+            type="file"
+          />
           <button className="secondary-button" type="button">Start Simulation</button>
           <Link className="secondary-button" href="/terminal">Terminal View</Link>
         </>
       }
     >
+      {selectedFile ? (
+        <section className="wide-card selected-file-banner">
+          <div className="card-header compact">
+            <div>
+              <h3>Selected Upload</h3>
+              <p>{selectedFile}</p>
+            </div>
+            <span className="pill">Ready</span>
+          </div>
+        </section>
+      ) : null}
+
       <section className="stats-grid">
         {monitoringStats.map((stat) => (
           <article key={stat.label} className="stat-card" style={{ "--accent": stat.accent }}>

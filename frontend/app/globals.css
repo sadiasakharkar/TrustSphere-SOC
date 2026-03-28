@@ -444,6 +444,18 @@ table th,
   gap: 0.75rem;
 }
 
+.hidden-file-input {
+  display: none;
+}
+
+.selected-file-banner {
+  margin-bottom: 1.25rem;
+}
+
+.card-header.compact {
+  margin-bottom: 0;
+}
+
 .stats-grid,
 .content-grid,
 .incident-top-grid,
