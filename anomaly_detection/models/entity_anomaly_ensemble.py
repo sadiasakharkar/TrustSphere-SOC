@@ -17,10 +17,10 @@ from anomaly_detection.models.entity_baseline_model import EntityBaselineModel
 
 
 class EntityAnomalyEnsemble:
-    def __init__(self, n_features: int = 2**17, contamination: float = 0.06) -> None:
+    def __init__(self, n_features: int = 2**17, contamination: float = 0.06, n_estimators: int = 200) -> None:
         self.hasher = FeatureHasher(n_features=n_features, input_type="dict", alternate_sign=False)
         self.global_model = IsolationForest(
-            n_estimators=200,
+            n_estimators=n_estimators,
             contamination=contamination,
             random_state=42,
             n_jobs=1,

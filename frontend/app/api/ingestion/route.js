@@ -38,10 +38,11 @@ async function runPipeline(filePath, datasetId, domain, limit = 50) {
 
 export async function GET() {
   try {
-    const samplePath = resolve(ROOT, "datasets", "synthetic", "ps1_demo", "ps1_disrupted.json");
+    const samplePath = resolve(ROOT, "tests", "fixtures", "sample_events.json");
     const payload = await runPipeline(samplePath, "frontend_simulation", "network", 50);
     return NextResponse.json(payload);
   } catch (error) {
+    console.error("Ingestion simulation failed", error);
     return NextResponse.json(
       { error: "Unable to run ingestion simulation." },
       { status: 500 }
@@ -73,6 +74,7 @@ export async function POST(request) {
     );
     return NextResponse.json(payload);
   } catch (error) {
+    console.error("Uploaded ingestion failed", error);
     return NextResponse.json(
       { error: "Unable to process the uploaded log package." },
       { status: 500 }

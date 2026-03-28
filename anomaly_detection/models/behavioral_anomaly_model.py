@@ -16,11 +16,11 @@ from prefiltering.ml.feature_extractor import build_features_for_dataset
 
 
 class BehavioralAnomalyDetector:
-    def __init__(self, n_features: int = 2**16, contamination: float = 0.08) -> None:
+    def __init__(self, n_features: int = 2**16, contamination: float = 0.08, n_estimators: int = 150) -> None:
         self.dataset_id: str | None = None
         self.hasher = FeatureHasher(n_features=n_features, input_type="dict", alternate_sign=False)
         self.model = IsolationForest(
-            n_estimators=150,
+            n_estimators=n_estimators,
             contamination=contamination,
             random_state=42,
             n_jobs=1,

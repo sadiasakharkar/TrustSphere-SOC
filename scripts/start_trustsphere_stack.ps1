@@ -6,6 +6,7 @@ $ErrorActionPreference = "Stop"
 
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 $FrontendDir = Join-Path $RepoRoot "frontend"
+$NextCacheDir = Join-Path $FrontendDir ".next"
 $VendorPath = Join-Path $RepoRoot ".vendor"
 $BackendUrl = "http://127.0.0.1:8000"
 $OllamaUrl = "http://127.0.0.1:11434"
@@ -87,6 +88,14 @@ if (Test-PortListening 3000) {
     $frontendScript = @"
 Set-Location '$FrontendDir'
 \$env:TRUSTSPHERE_BACKEND_URL = '$BackendUrl'
+if (-not (Test-Path 'node_modules')) {
+    Write-Host 'Installing frontend dependencies...' -ForegroundColor Cyan
+    npm install
+}
+if (Test-Path '$NextCacheDir') {
+    Write-Host 'Clearing stale Next.js cache...' -ForegroundColor DarkCyan
+    Remove-Item -LiteralPath '$NextCacheDir' -Recurse -Force -ErrorAction SilentlyContinue
+}
 Write-Host 'Starting TrustSphere frontend on http://127.0.0.1:3000' -ForegroundColor Cyan
 npm run dev
 "@

@@ -18,8 +18,26 @@ from normalization.validators.canonical_validator import validate_canonical_even
 from prefiltering.pipeline import PrefilteringPipeline
 
 
-ARTIFACT_PREFILTER = ROOT / "artifacts" / "prefiltering"
-ARTIFACT_ANOMALY = ROOT / "artifacts" / "anomaly_detection" / "entity_anomaly_ensemble.joblib"
+MODEL_SEARCH_ROOTS = (
+    ROOT / "seed_models",
+    ROOT / "artifacts",
+)
+
+
+def _resolve_prefilter_dir() -> Path:
+    for root in MODEL_SEARCH_ROOTS:
+        candidate = root / "prefiltering"
+        if (candidate / "prefilter_primary.joblib").exists() and (candidate / "prefilter_anomaly.joblib").exists():
+            return candidate
+    raise FileNotFoundError("No prefiltering model directory found in artifacts/ or seed_models/")
+
+
+def _resolve_entity_model() -> Path:
+    for root in MODEL_SEARCH_ROOTS:
+        candidate = root / "anomaly_detection" / "entity_anomaly_ensemble.joblib"
+        if candidate.exists():
+            return candidate
+    raise FileNotFoundError("No entity anomaly model found in artifacts/ or seed_models/")
 
 
 def _classification_label(label: str) -> str:
@@ -77,8 +95,8 @@ def _model_row(event: dict[str, Any]) -> dict[str, Any]:
 
 
 def build_live_ingestion_payload(path: Path, dataset_id: str, domain: str, limit: int = 50) -> dict[str, Any]:
-    prefilter = PrefilteringPipeline.load_from_artifacts(ARTIFACT_PREFILTER)
-    entity_model = EntityAnomalyEnsemble.load(ARTIFACT_ANOMALY)
+    prefilter = PrefilteringPipeline.load_from_artifacts(_resolve_prefilter_dir())
+    entity_model = EntityAnomalyEnsemble.load(_resolve_entity_model())
 
     rows = []
     terminal_lines = [
