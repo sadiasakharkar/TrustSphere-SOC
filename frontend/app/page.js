@@ -35,7 +35,7 @@ export default function LoginPage() {
                 onChange={(event) => {
                   setEmail(event.target.value);
                 }}
-                placeholder="analyst@trustsphere.com"
+                placeholder="enater email"
                 type="email"
                 value={email}
               />
@@ -48,7 +48,7 @@ export default function LoginPage() {
                 onChange={(event) => {
                   setPassword(event.target.value);
                 }}
-                placeholder="Enter your password"
+                placeholder="enater password"
                 type="password"
                 value={password}
               />
