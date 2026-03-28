@@ -82,7 +82,12 @@ def build_incidents(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
             timeline = reconstruct_timeline(incident_events)
             evidence = build_evidence_bundle(incident_events)
             severity = _severity_max(incident_events)
-            confidence = max(float(event.get("confidence", 0.0)) for event in incident_events)
+            event_confidences = [float(event.get("confidence", 0.0)) for event in incident_events]
+            max_confidence = max(event_confidences)
+            mean_confidence = sum(event_confidences) / len(event_confidences)
+            severity_boost = 0.1 if severity == "critical" else 0.05 if severity == "high" else 0.0
+            chain_boost = 0.05 if len(incident_events) >= 3 else 0.02 if len(incident_events) == 2 else 0.0
+            confidence = min(1.0, round((max_confidence * 0.6) + (mean_confidence * 0.25) + severity_boost + chain_boost, 4))
             related_ids = [event["event_id"] for event in incident_events]
             merged_ids = []
             for event_id in related_ids:
