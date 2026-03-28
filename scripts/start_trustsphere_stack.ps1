@@ -25,11 +25,51 @@ function Test-PortListening($Port) {
     }
 }
 
+function Get-ListeningProcessId($Port) {
+    try {
+        $connection = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction Stop | Select-Object -First 1
+        return $connection.OwningProcess
+    } catch {
+        return $null
+    }
+}
+
+function Stop-ListeningProcess($Port, $Label) {
+    $processId = Get-ListeningProcessId $Port
+    if ($null -eq $processId) {
+        return $false
+    }
+
+    try {
+        Stop-Process -Id $processId -Force -ErrorAction Stop
+        Write-Host "Stopped $Label process on port ${Port}." -ForegroundColor Yellow
+        Start-Sleep -Seconds 2
+        return $true
+    } catch {
+        Write-Host "Unable to stop $Label process on port ${Port}: $($_.Exception.Message)" -ForegroundColor Yellow
+        return $false
+    }
+}
+
 function Test-HttpOk($Url) {
     try {
         $response = Invoke-WebRequest -UseBasicParsing -Uri $Url -TimeoutSec 5 -ErrorAction Stop
         return $response.StatusCode -ge 200 -and $response.StatusCode -lt 400
     } catch {
+        return $false
+    }
+}
+
+function Test-FrontendLoginRoute($Url) {
+    try {
+        $payload = @{ email = "healthcheck@trustsphere.local"; password = "healthcheck" } | ConvertTo-Json -Compress
+        $response = Invoke-WebRequest -UseBasicParsing -Uri $Url -Method Post -ContentType "application/json" -Body $payload -TimeoutSec 8 -ErrorAction Stop
+        return $response.StatusCode -ge 200 -and $response.StatusCode -lt 500
+    } catch {
+        $statusCode = $_.Exception.Response.StatusCode.value__
+        if ($statusCode -and $statusCode -lt 500) {
+            return $true
+        }
         return $false
     }
 }
@@ -120,10 +160,26 @@ python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
 }
 
 Write-Step "Starting frontend app"
-if (Test-HttpOk "http://127.0.0.1:3000") {
+if ((Test-HttpOk "http://127.0.0.1:3000") -and (Test-FrontendLoginRoute "http://127.0.0.1:3000/api/login")) {
     Write-Host "Frontend is already responding on port 3000." -ForegroundColor Yellow
 } elseif (Test-PortListening 3000) {
-    Write-Host "Frontend port 3000 is busy, waiting for HTTP response..." -ForegroundColor Yellow
+    Write-Host "Frontend process is running but route health failed. Recycling the frontend..." -ForegroundColor Yellow
+    Stop-ListeningProcess 3000 "frontend" | Out-Null
+    if (Test-Path $NextCacheDir) {
+        Write-Host "Clearing stale Next.js cache..." -ForegroundColor DarkCyan
+        Remove-Item -LiteralPath $NextCacheDir -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    $frontendScript = @"
+Set-Location '$FrontendDir'
+\$env:TRUSTSPHERE_BACKEND_URL = '$BackendUrl'
+if (-not (Test-Path 'node_modules')) {
+    Write-Host 'Installing frontend dependencies...' -ForegroundColor Cyan
+    npm install
+}
+Write-Host 'Starting TrustSphere frontend on http://127.0.0.1:3000' -ForegroundColor Cyan
+npm run dev
+"@
+    Start-NewPowerShellWindow "Frontend" $frontendScript
     Wait-ForHttpOk "http://127.0.0.1:3000" "Frontend" | Out-Null
 } else {
     $frontendScript = @"
