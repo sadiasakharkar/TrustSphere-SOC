@@ -5,28 +5,12 @@ import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("analyst@trustsphere.com");
-  const [password, setPassword] = useState("secure-enterprise");
-  const [error, setError] = useState("");
-
-  const isEmailValid = /\S+@\S+\.\S+/.test(email);
-  const isPasswordValid = password.trim().length >= 8;
-  const canSubmit = isEmailValid && isPasswordValid;
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const canSubmit = email.trim().length > 0 && password.trim().length > 0;
 
   function handleSubmit(event) {
     event.preventDefault();
-
-    if (!isEmailValid) {
-      setError("Enter a valid work email to continue.");
-      return;
-    }
-
-    if (!isPasswordValid) {
-      setError("Vault password must be at least 8 characters.");
-      return;
-    }
-
-    setError("");
     router.push("/monitoring");
   }
 
@@ -50,7 +34,6 @@ export default function LoginPage() {
                 autoComplete="email"
                 onChange={(event) => {
                   setEmail(event.target.value);
-                  setError("");
                 }}
                 placeholder="analyst@trustsphere.com"
                 type="email"
@@ -64,7 +47,6 @@ export default function LoginPage() {
                 autoComplete="current-password"
                 onChange={(event) => {
                   setPassword(event.target.value);
-                  setError("");
                 }}
                 placeholder="Enter your password"
                 type="password"
@@ -72,8 +54,6 @@ export default function LoginPage() {
               />
             </label>
           </div>
-
-          {error ? <p className="form-error">{error}</p> : null}
 
           <button className="simple-login-button" disabled={!canSubmit} type="submit">
             Login
