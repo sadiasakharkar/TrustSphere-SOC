@@ -40,7 +40,7 @@ class Settings:
         self.frontend_origins = _split_csv(
             os.getenv(
                 "TRUSTSPHERE_FRONTEND_ORIGINS",
-                "http://localhost:3000,http://127.0.0.1:3000",
+                "http://localhost:3000,http://127.0.0.1:3000,http://localhost:11434,http://127.0.0.1:11434",
             )
         )
         self.runtime_dir.mkdir(parents=True, exist_ok=True)

@@ -101,6 +101,36 @@ def favicon() -> Response:
     return Response(status_code=204)
 
 
+@app.post("/analyze")
+async def analyze(request: Request) -> dict[str, Any]:
+    payload = await request.json()
+    text_parts: list[str] = []
+    if isinstance(payload, dict):
+        for key in ("content", "text", "pageContent", "body", "html", "url", "title"):
+            value = payload.get(key)
+            if isinstance(value, str) and value.strip():
+                text_parts.append(value.strip())
+    combined_text = "\n".join(text_parts).strip()
+    snippet = combined_text[:400]
+
+    indicators = {
+        "contains_login": "login" in combined_text.lower(),
+        "contains_password": "password" in combined_text.lower(),
+        "contains_bank_terms": any(term in combined_text.lower() for term in ("bank", "account", "transfer", "payment")),
+        "length": len(combined_text),
+    }
+
+    return {
+        "status": "ok",
+        "message": "TrustSphere analyze endpoint is available.",
+        "summary": {
+            "received_fields": sorted(payload.keys()) if isinstance(payload, dict) else [],
+            "text_excerpt": snippet,
+            "indicator_summary": indicators,
+        },
+    }
+
+
 @app.get("/health")
 def healthcheck() -> dict[str, str]:
     return {"status": "ok", "service": settings.app_name}
