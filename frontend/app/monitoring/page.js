@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import AppShell from "@/components/AppShell";
 import MaterialIcon from "@/components/MaterialIcon";
-import { monitoringControlPanel, monitoringStats, normalizedRows } from "@/lib/data";
+import { monitoringStats, normalizedRows } from "@/lib/data";
 
 function classificationTone(name) {
   if (name === "True Positive") return "tone-primary";
@@ -70,72 +70,7 @@ export default function MonitoringPage() {
         ))}
       </section>
 
-      <section className="content-grid">
-        <article className="wide-card">
-          <div className="card-header">
-            <div>
-              <h3>Top Alerts & Suspicious Indicators</h3>
-              <p>Immediate analyst-facing triage context: what needs action now and which indicators deserve deeper investigation.</p>
-            </div>
-            <span className="pill">se4.json</span>
-          </div>
-          <div className="command-center-grid">
-            <section className="command-card">
-              <div className="command-card-head">
-                <h4>Top Alerts Requiring Action</h4>
-                <p>Highest-value detections to triage before generating incidents.</p>
-              </div>
-              <div className="source-health-list">
-                {monitoringControlPanel.topAlerts.map((item) => (
-                  <div key={item.title} className="source-health-row">
-                    <div>
-                      <strong>{item.title}</strong>
-                      <p>{item.asset}</p>
-                      <p>{item.note}</p>
-                    </div>
-                    <div className="source-health-meta">
-                      <span className={`health-pill ${item.severity.toLowerCase()}`}>{item.severity}</span>
-                      <small>Confidence {item.confidence}</small>
-                      <small>{item.action}</small>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="command-card">
-              <div className="command-card-head">
-                <h4>IOC / Suspicious Indicators</h4>
-                <p>Indicators extracted from the current batch that should be investigated or enriched.</p>
-              </div>
-              <div className="readiness-list">
-                {monitoringControlPanel.suspiciousIndicators.map((item) => (
-                  <div key={item.value} className="readiness-item">
-                    <span>{item.type}</span>
-                    <strong className={`gap-tone ${item.tone}`}>{item.value}</strong>
-                    <p>{item.context}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="command-card">
-              <div className="command-card-head">
-                <h4>Analyst Brief</h4>
-                <p>Actionable direction for the next 10 minutes of investigation.</p>
-              </div>
-              <div className="action-note-list">
-                {monitoringControlPanel.analystBrief.map((item) => (
-                  <div key={item} className="action-note">
-                    <span />
-                    <p>{item}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </div>
-        </article>
-
+      <section className="content-grid side-only">
         <aside className="side-column">
           <article className="journey-card">
             <p className="mini-title">Simulation Journey</p>
