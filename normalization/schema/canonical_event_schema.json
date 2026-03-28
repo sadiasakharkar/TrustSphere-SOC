@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TrustSphere Canonical Security Event",
+  "type": "object",
+  "required": [
+    "event_id",
+    "event_time",
+    "ingest_time",
+    "source",
+    "raw_format",
+    "event_kind",
+    "severity",
+    "confidence",
+    "artifacts",
+    "labels",
+    "raw_ref"
+  ],
+  "properties": {
+    "event_id": { "type": "string" },
+    "event_time": { "type": "string", "format": "date-time" },
+    "ingest_time": { "type": "string", "format": "date-time" },
+    "source": {
+      "type": "object",
+      "required": ["dataset_id", "source_type"],
+      "properties": {
+        "dataset_id": { "type": "string" },
+        "source_type": { "type": "string" },
+        "collector": { "type": ["string", "null"] },
+        "host": { "type": ["string", "null"] }
+      }
+    },
+    "raw_format": { "type": "string", "enum": ["csv", "json", "ndjson", "syslog", "arff", "unknown"] },
+    "event_kind": {
+      "type": "string",
+      "enum": [
+        "network",
+        "endpoint",
+        "identity",
+        "application",
+        "email",
+        "url",
+        "alert",
+        "unknown"
+      ]
+    },
+    "severity": { "type": "string", "enum": ["low", "medium", "high", "critical", "unknown"] },
+    "confidence": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+    "principal": {
+      "type": "object",
+      "properties": {
+        "user_id": { "type": ["string", "null"] },
+        "email": { "type": ["string", "null"] },
+        "src_ip": { "type": ["string", "null"] },
+        "dest_ip": { "type": ["string", "null"] },
+        "hostname": { "type": ["string", "null"] }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "properties": {
+        "protocol": { "type": ["string", "null"] },
+        "action": { "type": ["string", "null"] },
+        "request_path": { "type": ["string", "null"] },
+        "user_agent": { "type": ["string", "null"] },
+        "bytes_transferred": { "type": ["integer", "null"] },
+        "urls": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "subject": { "type": ["string", "null"] },
+        "body": { "type": ["string", "null"] },
+        "feature_map": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "labels": {
+      "type": "object",
+      "properties": {
+        "ground_truth": { "type": ["string", "null"] },
+        "prefilter_label": { "type": ["string", "null"] },
+        "anomaly_label": { "type": ["string", "null"] }
+      }
+    },
+    "raw_ref": {
+      "type": "object",
+      "required": ["dataset_path"],
+      "properties": {
+        "dataset_path": { "type": "string" },
+        "archive_member": { "type": ["string", "null"] },
+        "row_number": { "type": ["integer", "null"] },
+        "content_hash": { "type": ["string", "null"] }
+      }
+    }
+  }
+}
