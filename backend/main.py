@@ -85,6 +85,22 @@ def _find_priority_record_or_404(incident_id: str):
     raise HTTPException(status_code=404, detail=f"Incident {incident_id} was not found.")
 
 
+@app.get("/")
+def root() -> dict[str, object]:
+    return {
+        "service": settings.app_name,
+        "status": "ok",
+        "docs": "/docs",
+        "health": "/health",
+        "message": "TrustSphere backend is running.",
+    }
+
+
+@app.get("/favicon.ico", status_code=204)
+def favicon() -> Response:
+    return Response(status_code=204)
+
+
 @app.get("/health")
 def healthcheck() -> dict[str, str]:
     return {"status": "ok", "service": settings.app_name}
