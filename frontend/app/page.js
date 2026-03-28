@@ -7,11 +7,42 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const canSubmit = email.trim().length > 0 && password.trim().length > 0;
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const canSubmit =
+    email.trim().length > 0 && password.trim().length > 0 && !loading;
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
-    router.push("/monitoring");
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Unable to sign in with those credentials.");
+        return;
+      }
+
+      router.push("/monitoring");
+      router.refresh();
+    } catch (fetchError) {
+      setError("Unable to connect to the login service.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -32,10 +63,11 @@ export default function LoginPage() {
               <span>Email</span>
               <input
                 autoComplete="email"
+                disabled={loading}
                 onChange={(event) => {
                   setEmail(event.target.value);
                 }}
-                placeholder="enater email"
+                placeholder="Enter email"
                 type="email"
                 value={email}
               />
@@ -45,18 +77,21 @@ export default function LoginPage() {
               <span>Password</span>
               <input
                 autoComplete="current-password"
+                disabled={loading}
                 onChange={(event) => {
                   setPassword(event.target.value);
                 }}
-                placeholder="enater password"
+                placeholder="Enter password"
                 type="password"
                 value={password}
               />
             </label>
           </div>
 
+          {error ? <p className="form-error">{error}</p> : null}
+
           <button className="simple-login-button" disabled={!canSubmit} type="submit">
-            Login
+            {loading ? "Signing in..." : "Login"}
           </button>
         </form>
       </section>

@@ -55,10 +55,9 @@ export async function POST(request) {
       { expiresIn: "1d" }
     );
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         message: "Login successful.",
-        token,
         user: {
           email: user.email,
           name: user.name,
@@ -67,6 +66,18 @@ export async function POST(request) {
       },
       { status: 200 }
     );
+
+    response.cookies.set({
+      name: "auth_token",
+      value: token,
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 24,
+    });
+
+    return response;
   } catch (error) {
     return NextResponse.json(
       { error: "Unable to process login request." },
