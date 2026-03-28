@@ -98,10 +98,10 @@ export default function LoginPage() {
               <span>Email and password are required before MFA verification.</span>
             </div>
 
-            <div className="form-grid">
-              <label>
-                <span>Work Email</span>
-                <div className="input-shell">
+            <div className="login-fields">
+              <label className="login-field">
+                <span className="field-label">Work Email</span>
+                <div className="input-shell login-input-shell">
                   <MaterialIcon name="mail" className="muted-icon" />
                   <input
                     autoComplete="email"
@@ -116,9 +116,9 @@ export default function LoginPage() {
                 </div>
               </label>
 
-              <label>
-                <span>Vault Password</span>
-                <div className="input-shell">
+              <label className="login-field">
+                <span className="field-label">Vault Password</span>
+                <div className="input-shell login-input-shell">
                   <MaterialIcon name="lock" className="muted-icon" />
                   <input
                     autoComplete="current-password"
