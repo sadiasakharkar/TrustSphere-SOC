@@ -278,6 +278,15 @@ def _normalize_list(payload: dict[str, Any], key: str) -> list[Any]:
     return value if isinstance(value, list) else []
 
 
+def _playbook_has_required_structure(payload: dict[str, Any] | None) -> bool:
+    if not isinstance(payload, dict):
+        return False
+    for key in PLAYBOOK_SCHEMA["required_keys"]:
+        if key not in payload:
+            return False
+    return True
+
+
 def _validate_playbook_payload(payload: dict[str, Any]) -> dict[str, Any]:
     grounded = _build_grounded_playbook(
         {
@@ -320,14 +329,17 @@ def generate_playbook_for_incident(priority_record: dict[str, Any], provider: st
     evidence_package = serialize_incident_for_llm(priority_record)
     client = build_llm_client(provider=provider)
     response = client.generate(build_playbook_messages(evidence_package))
-    if response.status != "ok" or response.parsed_json is None:
-        playbook = _fallback_playbook(evidence_package, response.raw_text)
+    if response.status != "ok" or not _playbook_has_required_structure(response.parsed_json):
+        fallback_reason = "ollama_response_invalid_or_unavailable"
+        playbook = _fallback_playbook(evidence_package, fallback_reason)
+        llm_status = "fallback"
     else:
         playbook = _validate_playbook_payload(response.parsed_json)
+        llm_status = "ok"
     return {
         "incident_id": priority_record["incident_id"],
         "provider": response.provider,
-        "llm_status": response.status,
+        "llm_status": llm_status,
         "analyst_only": True,
         "approval_required": True,
         "evidence_package": evidence_package,

@@ -15,6 +15,7 @@ TrustSphere-SOC combines behavioral analytics, incident correlation, risk-based 
 - Incident correlation with duplicate suppression and timeline reconstruction
 - Risk-based incident prioritization with asset context and recurrence awareness
 - Offline or secured-remote LLM integration for analyst-only playbook generation
+- Ollama-first local playbook generation for offline analyst workflows
 - Feedback-driven improvement for prioritization and retraining workflows
 
 ## Architecture
@@ -27,7 +28,7 @@ TrustSphere-SOC combines behavioral analytics, incident correlation, risk-based 
 - `anomaly_detection/` behavioral feature engineering and anomaly models
 - `correlation/` incident construction, deduplication, and evidence building
 - `prioritization/` incident ranking and LLM gating
-- `llm_service/` local and secured-remote LLM client integrations
+- `llm_service/` Ollama-first local LLM client integrations
 - `playbook_generation/` structured evidence packaging and response recommendations
 - `feedback_loop/` analyst feedback capture and retraining signal generation
 
@@ -37,7 +38,7 @@ TrustSphere-SOC combines behavioral analytics, incident correlation, risk-based 
 - Structured evidence handling instead of uncontrolled raw-log forwarding
 - Analyst-only response recommendations
 - Human approval required for playbook actions
-- Support for authenticated and signed remote LLM requests
+- Local LLM execution through Ollama for offline deployments
 - Least-privilege and compliance-oriented deployment model
 
 ## Technology Stack

@@ -1,9 +1,12 @@
 {
   "default_provider": "ollama",
+  "enforce_ollama_only": true,
   "ollama": {
     "base_url": "http://127.0.0.1:11434",
-    "model": "mistral:7b-instruct",
-    "timeout_seconds": 90
+    "model": "tinyllama:latest",
+    "timeout_seconds": 300,
+    "keep_alive": "30m",
+    "num_predict": 512
   },
   "remote": {
     "base_url": "https://127.0.0.1:8443",

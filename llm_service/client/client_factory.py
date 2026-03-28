@@ -15,12 +15,16 @@ def load_llm_config(path: str | Path = Path("configs/llm_config.json")) -> dict[
 def build_llm_client(provider: str | None = None, config_path: str | Path = Path("configs/llm_config.json")):
     config = load_llm_config(config_path)
     provider = provider or config.get("default_provider", "ollama")
+    if config.get("enforce_ollama_only", False):
+        provider = "ollama"
     if provider == "ollama":
         ollama = config["ollama"]
         return OllamaClient(
             base_url=ollama["base_url"],
             model=ollama["model"],
             timeout_seconds=int(ollama.get("timeout_seconds", 90)),
+            keep_alive=ollama.get("keep_alive"),
+            num_predict=int(ollama.get("num_predict", 512)),
         )
     if provider == "remote":
         remote = config["remote"]
