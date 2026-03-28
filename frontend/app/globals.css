@@ -551,6 +551,124 @@ table th,
   display: block;
 }
 
+.command-center-grid,
+.source-health-list,
+.readiness-list,
+.action-note-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.command-center-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.command-card {
+  padding: 1rem;
+  border-radius: 1rem;
+  background: var(--surface-container-low);
+}
+
+.command-card-head h4 {
+  margin: 0;
+  font-family: var(--font-headline), sans-serif;
+  font-size: 1.05rem;
+}
+
+.command-card-head p,
+.source-health-row p,
+.readiness-item p,
+.action-note p {
+  margin: 0.3rem 0 0;
+  color: var(--on-surface-variant);
+}
+
+.source-health-row,
+.readiness-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid rgba(189, 200, 209, 0.25);
+}
+
+.source-health-row:last-child,
+.readiness-item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.source-health-row strong,
+.readiness-item strong {
+  font-family: var(--font-headline), sans-serif;
+  font-size: 1.05rem;
+}
+
+.source-health-meta {
+  display: grid;
+  justify-items: end;
+  gap: 0.35rem;
+}
+
+.source-health-meta small {
+  color: var(--outline);
+  font-size: 0.75rem;
+}
+
+.health-pill {
+  display: inline-flex;
+  padding: 0.32rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.health-pill.success {
+  background: rgba(11, 143, 98, 0.12);
+  color: #0b8f62;
+}
+
+.health-pill.warning {
+  background: rgba(234, 140, 33, 0.12);
+  color: var(--tertiary);
+}
+
+.health-pill.primary {
+  background: rgba(0, 101, 141, 0.12);
+  color: var(--primary);
+}
+
+.readiness-item {
+  display: grid;
+}
+
+.readiness-item span {
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--outline);
+}
+
+.action-note {
+  display: grid;
+  grid-template-columns: 0.7rem 1fr;
+  gap: 0.8rem;
+  align-items: start;
+  padding: 0.2rem 0;
+}
+
+.action-note span {
+  width: 0.7rem;
+  height: 0.7rem;
+  margin-top: 0.35rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-container));
+}
+
 .side-column {
   display: grid;
   gap: 1.25rem;
@@ -1454,7 +1572,8 @@ table tbody tr + tr {
   .incident-top-grid,
   .stats-grid,
   .terminal-layout,
-  .terminal-two-up {
+  .terminal-two-up,
+  .command-center-grid {
     grid-template-columns: 1fr;
   }
 

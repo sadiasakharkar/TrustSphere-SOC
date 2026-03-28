@@ -3,9 +3,8 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import AppShell from "@/components/AppShell";
-import D3LineChart from "@/components/D3LineChart";
 import MaterialIcon from "@/components/MaterialIcon";
-import { eventTrend, monitoringStats, normalizedRows } from "@/lib/data";
+import { monitoringControlPanel, monitoringStats, normalizedRows } from "@/lib/data";
 
 function classificationTone(name) {
   if (name === "True Positive") return "tone-primary";
@@ -75,12 +74,64 @@ export default function MonitoringPage() {
         <article className="wide-card">
           <div className="card-header">
             <div>
-              <h3>Event Volume Pulse</h3>
-              <p>Real-time D3 chart for intake rate, suspicious detections, and filtered noise.</p>
+              <h3>Ingestion Command Center</h3>
+              <p>Operational context for analysts before incident generation, without repeating the top-level dashboard stats.</p>
             </div>
             <span className="pill">se4.json</span>
           </div>
-          <D3LineChart data={eventTrend} />
+          <div className="command-center-grid">
+            <section className="command-card">
+              <div className="command-card-head">
+                <h4>Source Health</h4>
+                <p>Live parser and stream readiness.</p>
+              </div>
+              <div className="source-health-list">
+                {monitoringControlPanel.sourceHealth.map((item) => (
+                  <div key={item.source} className="source-health-row">
+                    <div>
+                      <strong>{item.source}</strong>
+                      <p>{item.events}</p>
+                    </div>
+                    <div className="source-health-meta">
+                      <span className={`health-pill ${item.tone}`}>{item.status}</span>
+                      <small>{item.lag}</small>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="command-card">
+              <div className="command-card-head">
+                <h4>Parser Readiness</h4>
+                <p>What is ready to classify right now.</p>
+              </div>
+              <div className="readiness-list">
+                {monitoringControlPanel.parserReadiness.map((item) => (
+                  <div key={item.label} className="readiness-item">
+                    <span>{item.label}</span>
+                    <strong>{item.value}</strong>
+                    <p>{item.detail}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="command-card">
+              <div className="command-card-head">
+                <h4>Next Analyst Actions</h4>
+                <p>Recommended checks before escalation.</p>
+              </div>
+              <div className="action-note-list">
+                {monitoringControlPanel.nextActions.map((item) => (
+                  <div key={item} className="action-note">
+                    <span />
+                    <p>{item}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
         </article>
 
         <aside className="side-column">

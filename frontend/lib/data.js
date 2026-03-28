@@ -36,14 +36,23 @@ export const monitoringStats = [
   }
 ];
 
-export const eventTrend = [
-  { minute: "14:00", total: 2400, suspicious: 220, filtered: 950 },
-  { minute: "14:05", total: 3150, suspicious: 280, filtered: 1260 },
-  { minute: "14:10", total: 2950, suspicious: 260, filtered: 1090 },
-  { minute: "14:15", total: 3800, suspicious: 390, filtered: 1520 },
-  { minute: "14:20", total: 3420, suspicious: 310, filtered: 1340 },
-  { minute: "14:25", total: 4100, suspicious: 450, filtered: 1705 }
-];
+export const monitoringControlPanel = {
+  sourceHealth: [
+    { source: "Sysmon", status: "Healthy", lag: "1.2s lag", events: "812 parsed", tone: "success" },
+    { source: "Azure AD", status: "Watching", lag: "Schema drift", events: "4 field aliases pending", tone: "warning" },
+    { source: "CloudTrail", status: "Ready", lag: "0.6s lag", events: "233 parsed", tone: "primary" }
+  ],
+  parserReadiness: [
+    { label: "Canonical fields mapped", value: "92%", detail: "email, host, action, src_ip covered" },
+    { label: "Records needing review", value: "18", detail: "mostly missing actor ids from Azure AD exports" },
+    { label: "Playbook candidates", value: "06", detail: "high-confidence incidents ready for terminal review" }
+  ],
+  nextActions: [
+    "Review Azure AD alias suggestions before generating incidents.",
+    "Confirm CloudTrail bucket ownership for cross-region events.",
+    "Prioritize PowerShell detections with confidence above 85%."
+  ]
+};
 
 export const normalizedRows = [
   {
