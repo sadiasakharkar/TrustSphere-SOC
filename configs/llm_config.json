@@ -1,0 +1,17 @@
+{
+  "default_provider": "ollama",
+  "ollama": {
+    "base_url": "http://127.0.0.1:11434",
+    "model": "mistral:7b-instruct",
+    "timeout_seconds": 90
+  },
+  "remote": {
+    "base_url": "https://127.0.0.1:8443",
+    "generate_path": "/v1/generate",
+    "auth_header": "X-TrustSphere-Key",
+    "api_key_env": "TRUSTSPHERE_LLM_API_KEY",
+    "request_signing_secret_env": "TRUSTSPHERE_LLM_SIGNING_SECRET",
+    "timeout_seconds": 90,
+    "verify_tls": true
+  }
+}
