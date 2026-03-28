@@ -1,9 +1,35 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "trustsphere-soc"
 version = "0.1.0"
 description = "Offline-first SOC pipeline foundation for TrustSphere"
 requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.116,<1.0",
+    "uvicorn[standard]>=0.35,<1.0",
+    "pydantic>=2.11,<3.0",
+    "python-multipart>=0.0.20,<1.0",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+
+[tool.setuptools.packages.find]
+include = [
+    "anomaly_detection*",
+    "backend*",
+    "correlation*",
+    "feedback_loop*",
+    "ingestion*",
+    "llm_service*",
+    "normalization*",
+    "playbook_generation*",
+    "prefiltering*",
+    "prioritization*",
+    "shared*",
+]
+exclude = ["frontend*", "configs*", "datasets*", "tests*", "runtime*"]
