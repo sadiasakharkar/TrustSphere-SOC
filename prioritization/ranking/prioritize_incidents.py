@@ -4,6 +4,8 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+from feedback_loop.analyst_feedback.feedback_store import load_feedback
+from feedback_loop.retraining_signals.signal_builder import build_feedback_signal_map, incident_feedback_signature
 from prioritization.models.priority_record import PriorityRecord
 from prioritization.risk_engine.asset_context import asset_score_for_incident, load_asset_context
 
@@ -81,10 +83,11 @@ def prioritize_incidents(
     incidents: list[dict[str, Any]],
     *,
     asset_context_path: str | Path = Path("configs/asset_context.json"),
+    feedback_path: str | Path | None = Path("feedback_loop/analyst_feedback/feedback_log.jsonl"),
 ) -> list[dict[str, Any]]:
     asset_context = load_asset_context(asset_context_path)
     recurrence_scores = _recurrence_scores(incidents)
-    priority_records: list[dict[str, Any]] = []
+    raw_priority_records: list[dict[str, Any]] = []
     llm_thresholds = asset_context.get("llm_thresholds", {})
     minimum_priority = float(llm_thresholds.get("minimum_priority_score", 0.68))
     minimum_confidence = float(llm_thresholds.get("minimum_confidence", 0.72))
@@ -129,13 +132,33 @@ def prioritize_incidents(
             reasons=reasons,
             incident=incident,
         )
-        priority_records.append(record.to_dict())
+        raw_priority_records.append(record.to_dict())
 
-    priority_records.sort(
+    if feedback_path is not None:
+        feedback_records = load_feedback(feedback_path)
+        signal_map = build_feedback_signal_map(raw_priority_records, feedback_records)
+        signature_signal_map = {
+            signal["signature"]: signal["boost_score"]
+            for signal in signal_map.values()
+        }
+        for record in raw_priority_records:
+            signature = incident_feedback_signature(record["incident"])
+            boost = signature_signal_map.get(signature, 0.0)
+            if boost:
+                record["priority_score"] = round(max(0.0, min(record["priority_score"] + boost, 1.0)), 4)
+                record["priority_label"] = _priority_label(record["priority_score"])
+                record["score_breakdown"]["feedback_boost"] = round(boost, 4)
+                record["reasons"].append("analyst feedback adjustment")
+                record["llm_eligible"] = (
+                    record["priority_score"] >= minimum_priority
+                    and float(record["incident"].get("confidence", 0.0)) >= minimum_confidence
+                )
+
+    raw_priority_records.sort(
         key=lambda item: (item["priority_score"], item["incident"]["confidence"], item["incident"]["start_time"]),
         reverse=True,
     )
-    return priority_records
+    return raw_priority_records
 
 
 def llm_candidate_incidents(priority_records: list[dict[str, Any]]) -> list[dict[str, Any]]:
