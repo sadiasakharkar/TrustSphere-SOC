@@ -10,11 +10,17 @@ Only use the structured evidence provided.
 Do not invent telemetry, actions, or certainty.
 All remediation steps must be analyst approval required.
 Respond strictly as JSON with keys:
-summary, likely_attack_path, confidence_rationale, recommended_actions, containment_checks, escalation_conditions.
+incident_summary, evidence_panel, risk_score, risk_breakdown, confidence_level,
+confidence_rationale, attack_stage, recommended_actions, approval_requirement,
+business_impact, explainability.
+evidence_panel must be a list of objects with keys: signal, observation, risk_contribution.
+risk_score must be an object with keys: score, label.
+risk_breakdown must be a list of objects with keys: factor, score.
+confidence_level must be an object with keys: level, score.
+attack_stage must be a short string describing attack lifecycle stage.
 recommended_actions must be a list of objects with keys:
-title, rationale, approval_required, priority.
-containment_checks must be a list of short strings.
-escalation_conditions must be a list of short strings.
+title, impact, approval_required, priority.
+business_impact must be a list of short strings.
 """.strip()
 
 

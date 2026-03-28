@@ -2,17 +2,31 @@ from __future__ import annotations
 
 PLAYBOOK_SCHEMA = {
     "required_keys": [
-        "summary",
-        "likely_attack_path",
+        "incident_summary",
+        "evidence_panel",
+        "risk_score",
+        "risk_breakdown",
+        "confidence_level",
         "confidence_rationale",
+        "attack_stage",
         "recommended_actions",
-        "containment_checks",
-        "escalation_conditions"
+        "approval_requirement",
+        "business_impact",
+        "explainability",
     ],
     "required_action_keys": [
         "title",
-        "rationale",
+        "impact",
         "approval_required",
-        "priority"
-    ]
+        "priority",
+    ],
+    "required_evidence_keys": [
+        "signal",
+        "observation",
+        "risk_contribution",
+    ],
+    "required_risk_breakdown_keys": [
+        "factor",
+        "score",
+    ],
 }

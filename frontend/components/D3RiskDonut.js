@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import * as d3 from "d3";
 
-export default function D3RiskDonut({ data }) {
+export default function D3RiskDonut({ data, totalValue = "0%", totalLabel = "Risk Level" }) {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export default function D3RiskDonut({ data }) {
       .style("font-size", "12px")
       .style("text-transform", "uppercase")
       .style("letter-spacing", "0.18em")
-      .text("Risk Level");
+      .text(totalLabel);
 
     chart
       .append("text")
@@ -48,8 +48,8 @@ export default function D3RiskDonut({ data }) {
       .attr("fill", "var(--error)")
       .style("font-size", "40px")
       .style("font-weight", "800")
-      .text("90%");
-  }, [data]);
+      .text(totalValue);
+  }, [data, totalLabel, totalValue]);
 
   return <svg ref={ref} role="img" aria-label="Risk composition donut chart" />;
 }

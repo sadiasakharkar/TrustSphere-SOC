@@ -198,6 +198,86 @@ export const evidenceTimeline = [
   }
 ];
 
+export const bankingPlaybook = {
+  caseId: "INC-00003",
+  status: "Analyst approval required within 60 seconds",
+  incidentSummary:
+    "Suspicious employee login detected from a new geographic location combined with abnormal mailbox and file access behavior.",
+  evidencePanel: [
+    {
+      signal: "Login Location",
+      observation: "finance_mgr@bank.local signed in from 193.168.0.50 with risky sign-in indicators.",
+      contribution: 30
+    },
+    {
+      signal: "Inbox Rule Change",
+      observation: "A new inbox rule forwarded or hid sensitive finance messages.",
+      contribution: 20
+    },
+    {
+      signal: "Mailbox Access",
+      observation: "MailItemsAccessed occurred immediately after the suspicious sign-in.",
+      contribution: 15
+    },
+    {
+      signal: "File Download",
+      observation: "Internal finance documents were downloaded in the same incident window.",
+      contribution: 15
+    },
+    {
+      signal: "Outbound Email Activity",
+      observation: "Send activity followed the mailbox and file access sequence.",
+      contribution: 10
+    }
+  ],
+  riskScore: 67,
+  riskLabel: "High",
+  riskBreakdown: [
+    { label: "Behavior anomaly", value: 39, color: "var(--error)" },
+    { label: "Threat pattern match", value: 32, color: "var(--primary)" },
+    { label: "Evidence correlation", value: 29, color: "var(--tertiary-container)" }
+  ],
+  confidence: {
+    level: "HIGH",
+    score: 72,
+    reasons: [
+      "Multiple independent signals appeared in one correlated incident window.",
+      "Risky sign-in indicators and mailbox abuse were both observed.",
+      "The sequence progressed from access to data handling behavior."
+    ]
+  },
+  attackStage: "Initial Access -> Credential Abuse",
+  actions: [
+    {
+      title: "Temporarily lock finance_mgr@bank.local",
+      impact: "Prevents further misuse of the account and stops follow-on access.",
+      urgency: "High"
+    },
+    {
+      title: "Preserve mailbox and identity logs",
+      impact: "Keeps evidence intact before remediation changes the environment.",
+      urgency: "High"
+    },
+    {
+      title: "Review downloaded finance documents and recipients",
+      impact: "Confirms whether sensitive information was exposed externally.",
+      urgency: "Medium"
+    },
+    {
+      title: "Increase monitoring on related identities and mail flow",
+      impact: "Helps detect spread or repeat misuse with low disruption.",
+      urgency: "Medium"
+    }
+  ],
+  businessImpact: [
+    "Potential unauthorized transfer or invoice fraud risk.",
+    "Possible exposure of sensitive internal finance communication.",
+    "Operational disruption risk if the compromised account remains active."
+  ],
+  explainability:
+    "AI flagged this incident because multiple abnormal behaviors occurred simultaneously in one correlated sequence: a risky sign-in, mailbox rule manipulation, mailbox access, document download, and outbound activity. This pattern is consistent with account compromise and data misuse workflows."
+};
+
 export const analystIncidents = [
   {
     id: "INC-001",
