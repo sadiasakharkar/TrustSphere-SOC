@@ -1,57 +1,61 @@
 # TrustSphere-SOC
 
-TrustSphere-SOC is an offline-first SOC intelligence platform for ingesting heterogeneous security telemetry, normalizing it into a common event model, prioritizing incidents, and generating analyst-only playbooks.
+TrustSphere-SOC is an AI-driven Security Operations Center platform designed to help analysts detect, correlate, prioritize, and respond to cyber incidents in regulated environments. The system is built for offline-first and air-gapped deployments, making it suitable for banking, fintech, and other security-sensitive domains where data sovereignty and controlled infrastructure are critical.
 
-This repository currently includes the Phase 1 data foundation:
+## Overview
 
-- a canonical event schema for all downstream modules
-- a registry covering every dataset shared so far
-- deterministic dataset split generation
-- metadata and manifest generation for repeatable experiments
+TrustSphere-SOC combines behavioral analytics, incident correlation, risk-based prioritization, and analyst-guided response generation into a unified workflow. It is designed to reduce alert fatigue, improve incident triage quality, and provide evidence-backed, approval-required recommendations without relying on external cloud AI services.
 
-## Current focus
+## Core Capabilities
 
-Phase 1 is designed to make the rest of the pipeline reliable:
+- Multi-format ingestion for structured and semi-structured security telemetry
+- Canonical normalization across heterogeneous log formats and field schemas
+- Rule-based and machine learning-assisted prefiltering
+- Behavioral anomaly detection across users, IPs, hosts, protocols, and actions
+- Incident correlation with duplicate suppression and timeline reconstruction
+- Risk-based incident prioritization with asset context and recurrence awareness
+- Offline or secured-remote LLM integration for analyst-only playbook generation
+- Feedback-driven improvement for prioritization and retraining workflows
 
-1. register every available dataset
-2. define one canonical event contract
-3. generate reproducible train/validation/test splits
-4. keep large raw data outside Git while still making the repo runnable
+## Architecture
 
-## Quick start
+- `frontend/` user interface and analyst workflow experience
+- `backend/` service-layer application logic
+- `ingestion/` source parsing and record loading
+- `normalization/` canonical event mapping and validation
+- `prefiltering/` rule scoring, first-stage classification, and fusion logic
+- `anomaly_detection/` behavioral feature engineering and anomaly models
+- `correlation/` incident construction, deduplication, and evidence building
+- `prioritization/` incident ranking and LLM gating
+- `llm_service/` local and secured-remote LLM client integrations
+- `playbook_generation/` structured evidence packaging and response recommendations
+- `feedback_loop/` analyst feedback capture and retraining signal generation
 
-1. Review and adjust dataset paths in [configs/dataset_registry.json](C:/Users/sejal/OneDrive/Desktop/TrustSphere-SOC/configs/dataset_registry.json).
-2. Run:
+## Security Principles
 
-```powershell
-python scripts/prepare_phase1_data.py
-```
+- Offline-first design for controlled and air-gapped environments
+- Structured evidence handling instead of uncontrolled raw-log forwarding
+- Analyst-only response recommendations
+- Human approval required for playbook actions
+- Support for authenticated and signed remote LLM requests
+- Least-privilege and compliance-oriented deployment model
 
-3. Generated manifests and split files will appear under `datasets/processed/`.
+## Technology Stack
 
-## Dataset coverage
+- Python
+- FastAPI-ready backend structure
+- Scikit-learn-based detection and anomaly models
+- Local LLM support through Ollama
+- Extensible pipeline for incident reasoning and playbook generation
 
-The current registry includes all provided data sources:
+## Use Cases
 
-- `cybersecurity_threat_detection_logs.csv`
-- `Nazario_5.zip`
-- `Nazario_5.csv`
-- `5.urldata.csv`
-- `dataset.arff`
-- `Website Phishing.csv`
-- `email_text.csv`
-- `test_email_dataset.csv`
-- `test_email_dataset - Copy.csv`
+- SOC alert triage and noise reduction
+- Behavioral threat detection
+- Insider threat and suspicious activity review
+- Incident correlation across multiple telemetry sources
+- Evidence-backed response playbook generation for regulated environments
 
-## Phase 1 outputs
+## Repository
 
-- canonical schema definition
-- source and dataset registry
-- deterministic splits for tabular datasets
-- manifest files with row counts, labels, hashes, and lineage
-
-## Notes
-
-- Raw datasets are intentionally not committed because of size.
-- The prep script reads the external source files directly from their current absolute paths.
-- When we move into Phase 2, these manifests become the contract for ingestion and normalization.
+This repository contains the core platform code, pipeline components, evaluation scripts, and supporting project assets for TrustSphere-SOC.
