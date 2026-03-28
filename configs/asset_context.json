@@ -32,7 +32,7 @@
     "critical": 1.0
   },
   "llm_thresholds": {
-    "minimum_priority_score": 0.68,
+    "minimum_priority_score": 0.6,
     "minimum_confidence": 0.72
   }
 }

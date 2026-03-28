@@ -79,6 +79,20 @@ def _priority_label(score: float) -> str:
     return "low"
 
 
+def _incident_strength_bonus(incident: dict[str, Any], prefilter: float, asset_score: float, severity: float) -> float:
+    summary = incident.get("summary", {})
+    event_count = int(summary.get("event_count", 0))
+    duplicate_total = int(summary.get("duplicate_total", 0))
+    bonus = 0.0
+    if event_count >= 2:
+        bonus += 0.03
+    if duplicate_total >= 2:
+        bonus += 0.02
+    if severity >= 1.0 and asset_score >= 1.0 and prefilter >= 0.9:
+        bonus += 0.05
+    return min(bonus, 0.08)
+
+
 def prioritize_incidents(
     incidents: list[dict[str, Any]],
     *,
@@ -99,6 +113,7 @@ def prioritize_incidents(
         recurrence = recurrence_scores.get(incident["incident_id"], 0.25)
         asset_score, asset_reasons = asset_score_for_incident(incident, asset_context)
         confidence = float(incident.get("confidence", 0.0))
+        strength_bonus = _incident_strength_bonus(incident, prefilter, asset_score, severity)
 
         priority_score = (
             prefilter * 0.30
@@ -106,6 +121,7 @@ def prioritize_incidents(
             + severity * 0.20
             + recurrence * 0.10
             + asset_score * 0.15
+            + strength_bonus
         )
         llm_eligible = priority_score >= minimum_priority and confidence >= minimum_confidence
         reasons = list(asset_reasons)
@@ -127,6 +143,7 @@ def prioritize_incidents(
                 "severity": round(severity, 4),
                 "recurrence": round(recurrence, 4),
                 "asset_context": round(asset_score, 4),
+                "strength_bonus": round(strength_bonus, 4),
                 "confidence": round(confidence, 4),
             },
             reasons=reasons,
