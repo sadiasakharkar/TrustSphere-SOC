@@ -44,11 +44,7 @@ export default function TerminalPage() {
   };
 
   return (
-    <AppShell
-      eyebrow="Analyst Workflow"
-      title="Analyst Terminal"
-      description="Investigation and triage workspace for active TrustSphere incidents, adapted from the analyst HTML view into the current frontend."
-    >
+    <AppShell>
       <section className="analyst-terminal">
         <div className="terminal-topbar">
           <div className="terminal-tabs">

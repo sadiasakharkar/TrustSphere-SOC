@@ -7,6 +7,7 @@ import { navItems } from "@/lib/data";
 
 export default function AppShell({ eyebrow, title, description, actions, children }) {
   const pathname = usePathname();
+  const showHeader = title || description || eyebrow || actions;
 
   return (
     <div className="app-shell">
@@ -68,14 +69,16 @@ export default function AppShell({ eyebrow, title, description, actions, childre
       </aside>
 
       <main className="canvas">
-        <section className="page-header">
-          <div>
-            {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
-            <h1>{title}</h1>
-            <p className="page-copy">{description}</p>
-          </div>
-          {actions ? <div className="page-actions">{actions}</div> : null}
-        </section>
+        {showHeader ? (
+          <section className="page-header">
+            <div>
+              {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
+              {title ? <h1>{title}</h1> : null}
+              {description ? <p className="page-copy">{description}</p> : null}
+            </div>
+            {actions ? <div className="page-actions">{actions}</div> : null}
+          </section>
+        ) : null}
         {children}
       </main>
     </div>
