@@ -1,3 +1,4 @@
+import Link from "next/link";
 import AppShell from "@/components/AppShell";
 import D3LineChart from "@/components/D3LineChart";
 import MaterialIcon from "@/components/MaterialIcon";
@@ -19,7 +20,7 @@ export default function MonitoringPage() {
         <>
           <button className="secondary-button" type="button">Upload Logs</button>
           <button className="secondary-button" type="button">Start Simulation</button>
-          <button className="secondary-button" type="button">Terminal View</button>
+          <Link className="secondary-button" href="/terminal">Terminal View</Link>
         </>
       }
     >
