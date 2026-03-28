@@ -1,86 +1,72 @@
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
 
-import connectToDatabase from "@/lib/mongodb";
-import User from "@/models/User";
+const BACKEND_AUTH_URL =
+  process.env.TRUSTSPHERE_BACKEND_URL || "http://127.0.0.1:8000";
+
+function extractCookieValue(setCookieHeader, cookieName) {
+  if (!setCookieHeader) {
+    return null;
+  }
+
+  const pattern = new RegExp(`${cookieName}=([^;]+)`);
+  const match = setCookieHeader.match(pattern);
+  return match ? match[1] : null;
+}
 
 export async function POST(request) {
   try {
-    const { email, password } = await request.json();
-    const jwtSecret = process.env.JWT_SECRET;
+    const payload = await request.json();
 
-    if (!email || !password) {
+    if (!payload?.email || !payload?.password) {
       return NextResponse.json(
         { error: "Email and password are required." },
         { status: 400 }
       );
     }
 
-    if (!jwtSecret) {
-      return NextResponse.json(
-        { error: "JWT secret is not configured." },
-        { status: 500 }
-      );
-    }
-
-    await connectToDatabase();
-
-    const normalizedEmail = email.trim().toLowerCase();
-    const user = await User.findOne({ email: normalizedEmail });
-
-    if (!user) {
-      return NextResponse.json(
-        { error: "Invalid email or password." },
-        { status: 401 }
-      );
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      return NextResponse.json(
-        { error: "Invalid email or password." },
-        { status: 401 }
-      );
-    }
-
-    const token = jwt.sign(
-      {
-        userId: user._id.toString(),
-        email: user.email,
-        role: user.role,
+    const upstream = await fetch(`${BACKEND_AUTH_URL}/api/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-      jwtSecret,
-      { expiresIn: "1d" }
-    );
-
-    const response = NextResponse.json(
-      {
-        message: "Login successful.",
-        user: {
-          email: user.email,
-          name: user.name,
-          role: user.role,
-        },
-      },
-      { status: 200 }
-    );
-
-    response.cookies.set({
-      name: "auth_token",
-      value: token,
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 60 * 60 * 24,
+      body: JSON.stringify(payload),
+      cache: "no-store",
     });
+
+    const data = await upstream.json().catch(() => ({
+      error: "Unable to parse backend login response.",
+    }));
+
+    if (!upstream.ok) {
+      return NextResponse.json(
+        { error: data.detail || data.error || "Unable to sign in." },
+        { status: upstream.status }
+      );
+    }
+
+    const sessionToken = extractCookieValue(
+      upstream.headers.get("set-cookie"),
+      "trustsphere_session"
+    );
+
+    const response = NextResponse.json(data, { status: 200 });
+
+    if (sessionToken) {
+      response.cookies.set({
+        name: "trustsphere_session",
+        value: sessionToken,
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: 60 * 60 * 12,
+      });
+    }
 
     return response;
   } catch (error) {
     return NextResponse.json(
-      { error: "Unable to process login request." },
+      { error: "Unable to connect to the TrustSphere backend." },
       { status: 500 }
     );
   }
