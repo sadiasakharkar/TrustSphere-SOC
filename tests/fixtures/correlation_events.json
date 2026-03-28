@@ -1,0 +1,52 @@
+{
+  "events": [
+    {
+      "event_time": "2024-05-01T00:05:00Z",
+      "src_ip": "192.168.1.50",
+      "destination_ip": "192.168.1.70",
+      "proto": "HTTPS",
+      "decision": "blocked",
+      "classification": "suspicious",
+      "event_category": "ids",
+      "bytes_out": 1200,
+      "ua": "curl/7.64.1",
+      "uri": "/admin"
+    },
+    {
+      "event_time": "2024-05-01T00:01:00Z",
+      "src_ip": "192.168.1.50",
+      "destination_ip": "192.168.1.70",
+      "proto": "HTTPS",
+      "decision": "blocked",
+      "classification": "suspicious",
+      "event_category": "ids",
+      "bytes_out": 1180,
+      "ua": "curl/7.64.1",
+      "uri": "/admin"
+    },
+    {
+      "event_time": "2024-05-01T00:03:00Z",
+      "src_ip": "192.168.1.50",
+      "destination_ip": "192.168.1.70",
+      "proto": "HTTPS",
+      "decision": "allowed",
+      "classification": "malicious",
+      "event_category": "application",
+      "bytes_out": 8200,
+      "ua": "curl/7.64.1",
+      "uri": "/admin/config"
+    },
+    {
+      "event_time": "2024-05-01T00:08:00Z",
+      "src_ip": "10.0.0.20",
+      "destination_ip": "10.0.0.30",
+      "proto": "TCP",
+      "decision": "allowed",
+      "classification": "benign",
+      "event_category": "firewall",
+      "bytes_out": 300,
+      "ua": "Mozilla/5.0",
+      "uri": "/"
+    }
+  ]
+}
