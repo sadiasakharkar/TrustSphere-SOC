@@ -1,0 +1,3 @@
+timestamp,source_ip,dest_ip,protocol,action,threat_label,log_type,bytes_transferred,user_agent,request_path
+2024-05-01T00:00:00,192.168.1.125,192.168.1.124,TCP,blocked,benign,firewall,10889,Nmap Scripting Engine,/
+2024-10-14T00:00:00,192.168.1.20,192.168.1.242,HTTPS,allowed,suspicious,application,2461,curl/7.64.1,/admin/config

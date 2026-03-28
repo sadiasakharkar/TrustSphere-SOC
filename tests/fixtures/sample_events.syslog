@@ -1,0 +1,2 @@
+<134>Mar 28 10:22:33 soc-gw trustsphere-agent[1001]: event_time=2024-03-28T10:22:33Z src_ip=192.168.1.55 destination_ip=192.168.1.77 proto=TCP decision=blocked classification=malicious event_category=ids bytes_out=981 ua="curl/7.64.1" uri=/admin
+<134>Mar 28 10:24:01 soc-gw trustsphere-agent[1001]: src_ip=192.168.1.80 destination_ip=192.168.1.81 proto=UDP decision=allowed classification=benign event_category=firewall

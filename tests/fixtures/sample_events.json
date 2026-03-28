@@ -1,0 +1,25 @@
+{
+  "events": [
+    {
+      "event_time": "2024-05-01T00:00:00Z",
+      "src_ip": "10.0.0.10",
+      "destination_ip": "10.0.0.20",
+      "proto": "HTTP",
+      "decision": "allowed",
+      "classification": "malicious",
+      "event_category": "ids",
+      "bytes_out": 1200,
+      "ua": "Mozilla/5.0",
+      "uri": "/login"
+    },
+    {
+      "event_time": "2024-05-02T08:10:00Z",
+      "src_ip": "10.0.0.11",
+      "destination_ip": "10.0.0.21",
+      "proto": "HTTPS",
+      "decision": "blocked",
+      "classification": "suspicious",
+      "event_category": "firewall"
+    }
+  ]
+}

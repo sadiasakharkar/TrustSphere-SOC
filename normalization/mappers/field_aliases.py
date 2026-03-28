@@ -1,0 +1,42 @@
+from __future__ import annotations
+
+FIELD_ALIASES: dict[str, tuple[str, ...]] = {
+    "timestamp": (
+        "timestamp",
+        "event_time",
+        "time",
+        "@timestamp",
+        "date",
+        "ts",
+    ),
+    "source_ip": (
+        "source_ip",
+        "src_ip",
+        "src",
+        "client_ip",
+        "ip_src",
+        "source.address",
+    ),
+    "dest_ip": (
+        "dest_ip",
+        "dst_ip",
+        "destination_ip",
+        "dest",
+        "ip_dst",
+        "destination.address",
+    ),
+    "protocol": ("protocol", "proto", "network_protocol"),
+    "action": ("action", "decision", "outcome", "event_action"),
+    "threat_label": ("threat_label", "label", "classification", "threat_class"),
+    "log_type": ("log_type", "source_type", "category", "event_category"),
+    "bytes_transferred": ("bytes_transferred", "bytes", "bytes_out", "transfer_bytes"),
+    "user_agent": ("user_agent", "ua", "http_user_agent"),
+    "request_path": ("request_path", "path", "uri", "url_path"),
+    "subject": ("subject", "email_subject"),
+    "body": ("body", "message", "email_body", "raw_message", "text"),
+    "urls": ("urls", "url", "link", "links"),
+    "host": ("host", "hostname", "device", "agent_host"),
+    "app": ("app", "application", "program"),
+    "user_id": ("user_id", "user", "username", "principal"),
+    "email": ("email", "sender", "from"),
+}
