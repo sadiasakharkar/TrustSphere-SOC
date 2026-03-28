@@ -1,9 +1,54 @@
-import Link from "next/link";
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import MaterialIcon from "@/components/MaterialIcon";
 
-const otp = ["5", "2", "9", "", "", ""];
+const initialOtp = ["5", "2", "9", "", "", ""];
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("analyst@trustsphere.com");
+  const [password, setPassword] = useState("secure-enterprise");
+  const [otp, setOtp] = useState(initialOtp);
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+
+  const isEmailValid = /\S+@\S+\.\S+/.test(email);
+  const isPasswordValid = password.trim().length >= 8;
+  const isOtpValid = otp.every((digit) => digit.trim().length === 1);
+  const canSubmit = isEmailValid && isPasswordValid && isOtpValid;
+
+  function handleOtpChange(index, value) {
+    const nextValue = value.replace(/\D/g, "").slice(-1);
+    const nextOtp = [...otp];
+    nextOtp[index] = nextValue;
+    setOtp(nextOtp);
+    setError("");
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault();
+
+    if (!isEmailValid) {
+      setError("Enter a valid work email to continue.");
+      return;
+    }
+
+    if (!isPasswordValid) {
+      setError("Vault password must be at least 8 characters.");
+      return;
+    }
+
+    if (!isOtpValid) {
+      setError("Complete the 6-digit verification code.");
+      return;
+    }
+
+    setError("");
+    router.push("/monitoring");
+  }
+
   return (
     <main className="login-page">
       <section className="hero-panel">
@@ -41,28 +86,64 @@ export default function LoginPage() {
 
       <section className="login-panel">
         <div className="panel-stack" />
-        <div className="login-card">
+        <form className="login-card" onSubmit={handleSubmit}>
           <div>
             <h2>Analyst Portal</h2>
             <p>Provide your credentials to access the secure terminal.</p>
           </div>
 
-          <div className="form-grid">
-            <label>
-              <span>Work Email</span>
-              <div className="input-shell">
-                <MaterialIcon name="mail" className="muted-icon" />
-                <input defaultValue="analyst@trustsphere.com" type="email" />
-              </div>
-            </label>
+          <div className="credentials-card">
+            <div className="credentials-header">
+              <p>Credentials</p>
+              <span>Email and password are required before MFA verification.</span>
+            </div>
 
-            <label>
-              <span>Vault Password</span>
-              <div className="input-shell">
-                <MaterialIcon name="lock" className="muted-icon" />
-                <input defaultValue="secure-enterprise" type="password" />
-              </div>
-            </label>
+            <div className="form-grid">
+              <label>
+                <span>Work Email</span>
+                <div className="input-shell">
+                  <MaterialIcon name="mail" className="muted-icon" />
+                  <input
+                    autoComplete="email"
+                    onChange={(event) => {
+                      setEmail(event.target.value);
+                      setError("");
+                    }}
+                    placeholder="analyst@trustsphere.com"
+                    type="email"
+                    value={email}
+                  />
+                </div>
+              </label>
+
+              <label>
+                <span>Vault Password</span>
+                <div className="input-shell">
+                  <MaterialIcon name="lock" className="muted-icon" />
+                  <input
+                    autoComplete="current-password"
+                    onChange={(event) => {
+                      setPassword(event.target.value);
+                      setError("");
+                    }}
+                    placeholder="Enter your vault password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                  />
+                  <button
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    className="visibility-toggle"
+                    onClick={() => setShowPassword((current) => !current)}
+                    type="button"
+                  >
+                    <MaterialIcon
+                      name={showPassword ? "visibility_off" : "visibility"}
+                      className="muted-icon"
+                    />
+                  </button>
+                </div>
+              </label>
+            </div>
           </div>
 
           <div className="mfa-card">
@@ -75,18 +156,30 @@ export default function LoginPage() {
             </div>
             <div className="otp-row">
               {otp.map((digit, index) => (
-                <input key={index} defaultValue={digit} maxLength={1} type="text" />
+                <input
+                  key={index}
+                  aria-label={`OTP digit ${index + 1}`}
+                  inputMode="numeric"
+                  maxLength={1}
+                  onChange={(event) => handleOtpChange(index, event.target.value)}
+                  type="text"
+                  value={digit}
+                />
               ))}
             </div>
           </div>
 
-          <Link className="primary-button login-cta" href="/monitoring">
+          {error ? <p className="form-error">{error}</p> : null}
+
+          <button className="primary-button login-cta" disabled={!canSubmit} type="submit">
             Access Terminal
             <MaterialIcon name="arrow_forward" />
-          </Link>
+          </button>
 
           <div className="login-meta">
-            <span>Forgot password?</span>
+            <button className="text-button" type="button">
+              Forgot password?
+            </button>
             <div className="status-inline">
               <span className="status-dot" />
               <span>System Status: Optimal</span>
@@ -102,7 +195,7 @@ export default function LoginPage() {
               <span>Verified: MacBook Pro (London HQ Office)</span>
             </div>
           </div>
-        </div>
+        </form>
       </section>
     </main>
   );
