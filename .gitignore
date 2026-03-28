@@ -14,3 +14,5 @@ datasets/synthetic/*
 
 artifacts/
 *.log
+frontend/node_modules/
+frontend/.next/
