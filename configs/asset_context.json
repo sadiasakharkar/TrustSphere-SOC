@@ -1,0 +1,38 @@
+{
+  "critical_assets": {
+    "ips": {
+      "192.168.1.70": "critical",
+      "192.168.1.242": "high",
+      "10.0.0.30": "medium"
+    },
+    "hosts": {
+      "core-banking-app": "critical",
+      "payment-gateway": "high",
+      "admin-console": "high"
+    },
+    "paths": {
+      "/admin": "high",
+      "/admin/config": "critical",
+      "/auth": "high",
+      "/login": "medium"
+    }
+  },
+  "severity_weights": {
+    "unknown": 0.1,
+    "low": 0.25,
+    "medium": 0.5,
+    "high": 0.75,
+    "critical": 1.0
+  },
+  "asset_weights": {
+    "unknown": 0.15,
+    "low": 0.25,
+    "medium": 0.45,
+    "high": 0.7,
+    "critical": 1.0
+  },
+  "llm_thresholds": {
+    "minimum_priority_score": 0.68,
+    "minimum_confidence": 0.72
+  }
+}
