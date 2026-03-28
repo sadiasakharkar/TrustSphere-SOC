@@ -2,7 +2,6 @@ export const navItems = [
   { href: "/", label: "Access Control", icon: "lock" },
   { href: "/monitoring", label: "Live Ingestion", icon: "analytics" },
   { href: "/incidents", label: "Incident Queue", icon: "security" },
-  { href: "/terminal", label: "Analyst Terminal", icon: "terminal" },
   { href: "/playbook", label: "Response Playbook", icon: "auto_fix_high" }
 ];
 
