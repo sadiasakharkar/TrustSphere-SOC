@@ -37,20 +37,56 @@ export const monitoringStats = [
 ];
 
 export const monitoringControlPanel = {
-  sourceHealth: [
-    { source: "Sysmon", status: "Healthy", lag: "1.2s lag", events: "812 parsed", tone: "success" },
-    { source: "Azure AD", status: "Watching", lag: "Schema drift", events: "4 field aliases pending", tone: "warning" },
-    { source: "CloudTrail", status: "Ready", lag: "0.6s lag", events: "233 parsed", tone: "primary" }
+  topAlerts: [
+    {
+      title: "Privilege escalation from finance manager session",
+      asset: "finance_mgr@bank.local · FIN-WS-17",
+      severity: "Critical",
+      confidence: "91%",
+      action: "Disable account and isolate endpoint",
+      note: "PowerShell execution plus AD token abuse in the same sequence."
+    },
+    {
+      title: "Encrypted outbound transfer from db-prod-01",
+      asset: "db-prod-01 · Payments cluster",
+      severity: "High",
+      confidence: "86%",
+      action: "Block destination IP and snapshot host",
+      note: "Large egress appeared immediately after policy tampering."
+    },
+    {
+      title: "Suspicious backup or ransomware staging ambiguity",
+      asset: "svc_jenkins · Backup lane",
+      severity: "Review",
+      confidence: "45%",
+      action: "Validate AWS bucket ownership before escalation",
+      note: "Behavior overlaps with both backup automation and ransomware staging."
+    }
   ],
-  parserReadiness: [
-    { label: "Canonical fields mapped", value: "92%", detail: "email, host, action, src_ip covered" },
-    { label: "Records needing review", value: "18", detail: "mostly missing actor ids from Azure AD exports" },
-    { label: "Playbook candidates", value: "06", detail: "high-confidence incidents ready for terminal review" }
+  suspiciousIndicators: [
+    {
+      type: "IP",
+      value: "52.216.146.19",
+      context: "Unusual encrypted egress destination",
+      tone: "high"
+    },
+    {
+      type: "User",
+      value: "finance_mgr@bank.local",
+      context: "Credential abuse and privilege escalation trail",
+      tone: "critical"
+    },
+    {
+      type: "Command",
+      value: "powershell.exe -enc SQBFAFgA",
+      context: "Encoded PowerShell launched from Excel child process",
+      tone: "critical"
+    }
   ],
-  nextActions: [
-    "Review Azure AD alias suggestions before generating incidents.",
-    "Confirm CloudTrail bucket ownership for cross-region events.",
-    "Prioritize PowerShell detections with confidence above 85%."
+  analystBrief: [
+    "Investigate finance_mgr first because the identity risk is both high confidence and operationally urgent.",
+    "Treat db-prod-01 as the highest exfiltration candidate until destination ownership is confirmed.",
+    "Hold uncertain Jenkins-related detections for enrichment instead of escalating them prematurely."
   ]
 };
 

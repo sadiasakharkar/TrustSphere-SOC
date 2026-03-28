@@ -74,27 +74,29 @@ export default function MonitoringPage() {
         <article className="wide-card">
           <div className="card-header">
             <div>
-              <h3>Ingestion Command Center</h3>
-              <p>Operational context for analysts before incident generation, without repeating the top-level dashboard stats.</p>
+              <h3>Top Alerts & Suspicious Indicators</h3>
+              <p>Immediate analyst-facing triage context: what needs action now and which indicators deserve deeper investigation.</p>
             </div>
             <span className="pill">se4.json</span>
           </div>
           <div className="command-center-grid">
             <section className="command-card">
               <div className="command-card-head">
-                <h4>Source Health</h4>
-                <p>Live parser and stream readiness.</p>
+                <h4>Top Alerts Requiring Action</h4>
+                <p>Highest-value detections to triage before generating incidents.</p>
               </div>
               <div className="source-health-list">
-                {monitoringControlPanel.sourceHealth.map((item) => (
-                  <div key={item.source} className="source-health-row">
+                {monitoringControlPanel.topAlerts.map((item) => (
+                  <div key={item.title} className="source-health-row">
                     <div>
-                      <strong>{item.source}</strong>
-                      <p>{item.events}</p>
+                      <strong>{item.title}</strong>
+                      <p>{item.asset}</p>
+                      <p>{item.note}</p>
                     </div>
                     <div className="source-health-meta">
-                      <span className={`health-pill ${item.tone}`}>{item.status}</span>
-                      <small>{item.lag}</small>
+                      <span className={`health-pill ${item.severity.toLowerCase()}`}>{item.severity}</span>
+                      <small>Confidence {item.confidence}</small>
+                      <small>{item.action}</small>
                     </div>
                   </div>
                 ))}
@@ -103,15 +105,15 @@ export default function MonitoringPage() {
 
             <section className="command-card">
               <div className="command-card-head">
-                <h4>Parser Readiness</h4>
-                <p>What is ready to classify right now.</p>
+                <h4>IOC / Suspicious Indicators</h4>
+                <p>Indicators extracted from the current batch that should be investigated or enriched.</p>
               </div>
               <div className="readiness-list">
-                {monitoringControlPanel.parserReadiness.map((item) => (
-                  <div key={item.label} className="readiness-item">
-                    <span>{item.label}</span>
-                    <strong>{item.value}</strong>
-                    <p>{item.detail}</p>
+                {monitoringControlPanel.suspiciousIndicators.map((item) => (
+                  <div key={item.value} className="readiness-item">
+                    <span>{item.type}</span>
+                    <strong className={`gap-tone ${item.tone}`}>{item.value}</strong>
+                    <p>{item.context}</p>
                   </div>
                 ))}
               </div>
@@ -119,11 +121,11 @@ export default function MonitoringPage() {
 
             <section className="command-card">
               <div className="command-card-head">
-                <h4>Next Analyst Actions</h4>
-                <p>Recommended checks before escalation.</p>
+                <h4>Analyst Brief</h4>
+                <p>Actionable direction for the next 10 minutes of investigation.</p>
               </div>
               <div className="action-note-list">
-                {monitoringControlPanel.nextActions.map((item) => (
+                {monitoringControlPanel.analystBrief.map((item) => (
                   <div key={item} className="action-note">
                     <span />
                     <p>{item}</p>

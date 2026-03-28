@@ -631,12 +631,28 @@ table th,
   color: #0b8f62;
 }
 
+.health-pill.critical,
+.health-pill.danger {
+  background: rgba(186, 26, 26, 0.12);
+  color: var(--error);
+}
+
 .health-pill.warning {
   background: rgba(234, 140, 33, 0.12);
   color: var(--tertiary);
 }
 
 .health-pill.primary {
+  background: rgba(0, 101, 141, 0.12);
+  color: var(--primary);
+}
+
+.health-pill.high {
+  background: rgba(234, 140, 33, 0.12);
+  color: var(--tertiary);
+}
+
+.health-pill.review {
   background: rgba(0, 101, 141, 0.12);
   color: var(--primary);
 }
@@ -651,6 +667,26 @@ table th,
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--outline);
+}
+
+.gap-tone.danger {
+  color: var(--error);
+}
+
+.gap-tone.warning {
+  color: var(--tertiary);
+}
+
+.gap-tone.primary {
+  color: var(--primary);
+}
+
+.gap-tone.high {
+  color: var(--tertiary);
+}
+
+.gap-tone.critical {
+  color: var(--error);
 }
 
 .action-note {
