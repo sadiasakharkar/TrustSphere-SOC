@@ -281,10 +281,108 @@ def _normalize_list(payload: dict[str, Any], key: str) -> list[Any]:
 def _playbook_has_required_structure(payload: dict[str, Any] | None) -> bool:
     if not isinstance(payload, dict):
         return False
-    for key in PLAYBOOK_SCHEMA["required_keys"]:
-        if key not in payload:
-            return False
-    return True
+    return any(key in payload for key in ("incident_summary", "confidence_rationale", "recommended_actions", "explainability"))
+
+
+def _confidence_reason_is_grounded(reason: str, evidence_package: dict[str, Any]) -> bool:
+    text = reason.lower()
+    if not text.strip():
+        return False
+    evidence_blob = " ".join(
+        [
+            str(evidence_package.get("priority", {}).get("reasons", [])),
+            str(evidence_package.get("entities", {})),
+            str(evidence_package.get("timeline", [])),
+            str(evidence_package.get("structured_evidence", [])),
+        ]
+    ).lower()
+    keywords = [
+        "sign",
+        "login",
+        "mail",
+        "rule",
+        "download",
+        "send",
+        "risk",
+        "credential",
+        "file",
+        "host",
+        "user",
+        "account",
+        "access",
+    ]
+    return any(keyword in text and keyword in evidence_blob for keyword in keywords)
+
+
+def _merge_llm_actions(
+    grounded_actions: list[dict[str, Any]],
+    llm_actions: list[dict[str, Any]],
+    evidence_package: dict[str, Any],
+) -> list[dict[str, Any]]:
+    merged: list[dict[str, Any]] = []
+    evidence_blob = " ".join(
+        [
+            str(evidence_package.get("entities", {})),
+            str(evidence_package.get("timeline", [])),
+            str(evidence_package.get("structured_evidence", [])),
+        ]
+    ).lower()
+    for action in llm_actions:
+        title = str(action.get("title") or "").strip()
+        impact = str(action.get("impact") or "").strip()
+        priority = str(action.get("priority") or "medium").lower()
+        if not title or not impact:
+            continue
+        if len(title) > 120 or len(impact) > 240:
+            continue
+        grounded_keywords = ["account", "host", "log", "monitor", "mail", "file", "identity", "session"]
+        if not any(keyword in title.lower() or keyword in impact.lower() for keyword in grounded_keywords):
+            continue
+        if any(keyword in evidence_blob for keyword in ["mail", "rule", "download", "login", "file", "host"]):
+            merged.append(
+                {
+                    "title": title,
+                    "impact": impact,
+                    "approval_required": True,
+                    "priority": priority if priority in {"high", "medium", "low"} else "medium",
+                }
+            )
+    if not merged:
+        return grounded_actions
+    deduped: list[dict[str, Any]] = []
+    seen_titles: set[str] = set()
+    for action in merged + grounded_actions:
+        normalized_title = action["title"].strip().lower()
+        if normalized_title in seen_titles:
+            continue
+        seen_titles.add(normalized_title)
+        deduped.append(action)
+    return deduped[:4]
+
+
+def _merge_llm_playbook(grounded: dict[str, Any], llm_payload: dict[str, Any], evidence_package: dict[str, Any]) -> dict[str, Any]:
+    merged = dict(grounded)
+
+    incident_summary = str(llm_payload.get("incident_summary") or "").strip()
+    if incident_summary and len(incident_summary) <= 240:
+        merged["incident_summary"] = incident_summary
+
+    llm_confidence = llm_payload.get("confidence_rationale")
+    if isinstance(llm_confidence, list):
+        filtered_reasons = [str(item).strip() for item in llm_confidence if _confidence_reason_is_grounded(str(item), evidence_package)]
+        if filtered_reasons:
+            merged["confidence_rationale"] = filtered_reasons[:5]
+
+    llm_actions = llm_payload.get("recommended_actions")
+    if isinstance(llm_actions, list):
+        merged["recommended_actions"] = _merge_llm_actions(merged["recommended_actions"], llm_actions, evidence_package)
+
+    explainability = str(llm_payload.get("explainability") or "").strip()
+    if explainability and len(explainability) <= 600:
+        merged["explainability"] = explainability
+
+    merged["playbook_status"] = "ollama_enhanced"
+    return merged
 
 
 def _validate_playbook_payload(payload: dict[str, Any]) -> dict[str, Any]:
@@ -297,10 +395,6 @@ def _validate_playbook_payload(payload: dict[str, Any]) -> dict[str, Any]:
             "structured_evidence": [],
         }
     )
-    payload = {
-        **grounded,
-        **payload,
-    }
     for key in PLAYBOOK_SCHEMA["required_keys"]:
         payload.setdefault(key, grounded.get(key, [] if key.endswith("s") else ""))
     actions = _normalize_list(payload, "recommended_actions")
@@ -327,6 +421,7 @@ def _validate_playbook_payload(payload: dict[str, Any]) -> dict[str, Any]:
 
 def generate_playbook_for_incident(priority_record: dict[str, Any], provider: str | None = None) -> dict[str, Any]:
     evidence_package = serialize_incident_for_llm(priority_record)
+    grounded_playbook = _build_grounded_playbook(evidence_package)
     client = build_llm_client(provider=provider)
     response = client.generate(build_playbook_messages(evidence_package))
     if response.status != "ok" or not _playbook_has_required_structure(response.parsed_json):
@@ -334,7 +429,8 @@ def generate_playbook_for_incident(priority_record: dict[str, Any], provider: st
         playbook = _fallback_playbook(evidence_package, fallback_reason)
         llm_status = "fallback"
     else:
-        playbook = _validate_playbook_payload(response.parsed_json)
+        playbook = _merge_llm_playbook(grounded_playbook, response.parsed_json, evidence_package)
+        playbook = _validate_playbook_payload(playbook)
         llm_status = "ok"
     return {
         "incident_id": priority_record["incident_id"],
