@@ -6,6 +6,7 @@ from typing import Any, Iterator
 from ingestion.parsers.csv_parser import parse_csv_file
 from ingestion.parsers.json_parser import parse_json_file, parse_ndjson_file
 from ingestion.parsers.syslog_parser import parse_syslog_file
+from ingestion.parsers.xlsx_parser import parse_xlsx_file
 
 
 SUPPORTED_EXTENSIONS = {
@@ -14,6 +15,7 @@ SUPPORTED_EXTENSIONS = {
     ".ndjson": parse_ndjson_file,
     ".syslog": parse_syslog_file,
     ".log": parse_syslog_file,
+    ".xlsx": parse_xlsx_file,
 }
 
 

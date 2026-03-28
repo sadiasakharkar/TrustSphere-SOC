@@ -23,6 +23,12 @@ SEVERITY_MAP = {
     "1": "high",
     "0": "low",
     "-1": "medium",
+    "critical": "critical",
+    "high": "high",
+    "medium": "medium",
+    "low": "low",
+    "atrisk": "high",
+    "none": "low",
 }
 
 EVENT_KIND_MAP = {
@@ -33,6 +39,13 @@ EVENT_KIND_MAP = {
     "url_security": "url",
     "network_security": "network",
     "phishing_bundle": "alert",
+    "azure_ad": "identity",
+    "office365": "email",
+    "windows_security": "identity",
+    "sysmon": "endpoint",
+    "zeek": "network",
+    "cloud_waf": "application",
+    "github_actions_runner": "application",
 }
 
 
@@ -99,19 +112,63 @@ def _derive_event_kind(domain: str, record: dict[str, Any], log_type: str | None
 
 
 def _derive_confidence(label: str | None) -> float:
-    if label == "malicious":
+    normalized = str(label or "").strip().lower()
+    if normalized == "malicious":
         return 0.95
-    if label == "suspicious":
+    if normalized == "suspicious":
         return 0.75
-    if label == "benign":
+    if normalized == "benign":
         return 0.2
-    if label == "1":
+    if normalized == "1":
         return 0.8
-    if label == "0":
+    if normalized == "0":
         return 0.2
-    if label == "-1":
+    if normalized == "-1":
         return 0.5
+    if normalized == "critical":
+        return 0.95
+    if normalized == "high":
+        return 0.8
+    if normalized == "medium":
+        return 0.6
+    if normalized == "low":
+        return 0.3
+    if normalized == "atrisk":
+        return 0.8
     return 0.5
+
+
+def _derive_source_type(record: dict[str, Any], default: str) -> str:
+    for key in ("source", "log_source", "source_type", "event_category"):
+        value = record.get(key)
+        if value not in (None, ""):
+            return str(value)
+    return default
+
+
+def _infer_action(record: dict[str, Any], known_action: Any) -> str | None:
+    if known_action not in (None, ""):
+        return str(known_action)
+    event_id = str(record.get("EventID") or "")
+    if event_id == "4624":
+        return "login_success"
+    if event_id == "4625":
+        return "login_failure"
+    if event_id == "1":
+        return "process_create"
+    if event_id == "10":
+        return "process_access"
+    return None
+
+
+def _infer_request_path(record: dict[str, Any], known_path: Any) -> str | None:
+    if known_path not in (None, ""):
+        return str(known_path)
+    for key in ("http_uri", "QueryName", "file"):
+        value = record.get(key)
+        if value not in (None, ""):
+            return str(value)
+    return None
 
 
 def canonicalize_record(
@@ -134,6 +191,9 @@ def canonicalize_record(
         canonical_name: _first_value(record, aliases)
         for canonical_name, aliases in FIELD_ALIASES.items()
     }
+    known_values["log_type"] = _derive_source_type(record, str(log_type) if log_type else source_type)
+    known_values["action"] = _infer_action(record, known_values["action"])
+    known_values["request_path"] = _infer_request_path(record, known_values["request_path"])
     feature_map = {
         key: value
         for key, value in record.items()
@@ -159,7 +219,7 @@ def canonicalize_record(
         feature_map=feature_map,
     )
     labels = EventLabels(ground_truth=str(threat_label) if threat_label is not None else None)
-    source = EventSource(dataset_id=dataset_id, source_type=source_type, host=known_values["host"])
+    source = EventSource(dataset_id=dataset_id, source_type=known_values["log_type"], host=known_values["host"])
     raw_ref = RawReference(
         dataset_path=dataset_path,
         archive_member=archive_member,
@@ -173,8 +233,8 @@ def canonicalize_record(
         event_time=timestamp,
         source=source,
         raw_format=raw_format,
-        event_kind=_derive_event_kind(domain, record, str(log_type) if log_type else None),
-        severity=SEVERITY_MAP.get(str(threat_label), "unknown"),
+        event_kind=_derive_event_kind(domain, record, str(known_values["log_type"]) if known_values["log_type"] else None),
+        severity=SEVERITY_MAP.get(str(threat_label).strip().lower(), "unknown"),
         confidence=_derive_confidence(str(threat_label) if threat_label is not None else None),
         principal=principal,
         artifacts=artifacts,
