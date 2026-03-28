@@ -10,8 +10,37 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [pointerStyle, setPointerStyle] = useState({
+    "--pointer-x": "50%",
+    "--pointer-y": "50%",
+    "--tilt-x": "0deg",
+    "--tilt-y": "0deg",
+  });
   const canSubmit =
     email.trim().length > 0 && password.trim().length > 0 && !loading;
+
+  function handlePointerMove(event) {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const x = ((event.clientX - bounds.left) / bounds.width) * 100;
+    const y = ((event.clientY - bounds.top) / bounds.height) * 100;
+    const tiltX = ((y - 50) / 18).toFixed(2);
+    const tiltY = ((50 - x) / 18).toFixed(2);
+    setPointerStyle({
+      "--pointer-x": `${x}%`,
+      "--pointer-y": `${y}%`,
+      "--tilt-x": `${tiltX}deg`,
+      "--tilt-y": `${tiltY}deg`,
+    });
+  }
+
+  function handlePointerLeave() {
+    setPointerStyle({
+      "--pointer-x": "50%",
+      "--pointer-y": "50%",
+      "--tilt-x": "0deg",
+      "--tilt-y": "0deg",
+    });
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -47,57 +76,40 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="simple-login-page">
+    <main
+      className="simple-login-page"
+      onMouseLeave={handlePointerLeave}
+      onMouseMove={handlePointerMove}
+      style={pointerStyle}
+    >
       <section className="simple-login-brand">
         <div className="simple-login-ambient simple-login-ambient-one" />
         <div className="simple-login-ambient simple-login-ambient-two" />
+        <div className="simple-login-pointer-glow" />
         <div className="simple-login-grid" />
 
         <div className="simple-login-brand-copy">
-          <p className="simple-login-kicker">Banking SOC Co-Pilot</p>
           <h1>TrustSphere</h1>
-          <p className="simple-login-description">
-            Normalize raw telemetry, prioritize incidents, and generate analyst-first
-            response playbooks through a secure offline pipeline.
-          </p>
-
-          <div className="simple-login-signal-row">
-            <article className="simple-login-signal-card">
-              <strong>Offline AI</strong>
-              <span>Ollama-backed incident reasoning</span>
-            </article>
-            <article className="simple-login-signal-card">
-              <strong>Multi-Source</strong>
-              <span>Sysmon, Azure AD, Zeek, cloud events</span>
-            </article>
-          </div>
         </div>
 
         <div className="simple-login-orbit" aria-hidden="true">
           <div className="simple-login-orbit-ring simple-login-orbit-ring-one" />
           <div className="simple-login-orbit-ring simple-login-orbit-ring-two" />
           <div className="simple-login-orbit-core">
-            <span>Threat Mesh</span>
-            <strong>Live</strong>
+            <span />
           </div>
-          <div className="simple-login-orbit-node simple-login-node-one">SIEM</div>
-          <div className="simple-login-orbit-node simple-login-node-two">EDR</div>
-          <div className="simple-login-orbit-node simple-login-node-three">IAM</div>
-          <div className="simple-login-orbit-node simple-login-node-four">Cloud</div>
+          <div className="simple-login-orbit-node simple-login-node-one" />
+          <div className="simple-login-orbit-node simple-login-node-two" />
+          <div className="simple-login-orbit-node simple-login-node-three" />
+          <div className="simple-login-orbit-node simple-login-node-four" />
         </div>
       </section>
 
       <section className="simple-login-panel">
         <form className="simple-login-card" onSubmit={handleSubmit}>
           <div className="simple-login-copy">
-            <p className="simple-login-kicker">Secure Analyst Access</p>
-            <h2>Enter the command layer</h2>
-            <p>Sign in to review live ingestion, incident correlation, and response playbooks.</p>
-          </div>
-
-          <div className="simple-login-badges">
-            <span className="pill">Human approval only</span>
-            <span className="pill">Evidence-backed AI</span>
+            <h2>Login</h2>
+            <p>Enter your email and password to open the dashboard.</p>
           </div>
 
           <div className="simple-login-fields">
@@ -145,11 +157,6 @@ export default function LoginPage() {
           <button className="simple-login-button" disabled={!canSubmit} type="submit">
             {loading ? "Signing in..." : "Login"}
           </button>
-
-          <div className="simple-login-footer">
-            <span>Encrypted analyst session</span>
-            <span>Least-privilege access path</span>
-          </div>
         </form>
       </section>
     </main>
