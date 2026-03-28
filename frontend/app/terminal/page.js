@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
 import { analystIncidents } from "@/lib/data";
+import { loadLiveAnalysis, payloadSummary } from "@/lib/liveAnalysis";
 
 const TABS = ["Triage", "Investigation", "Closed"];
 
@@ -15,14 +16,31 @@ function severityTone(severity) {
 export default function TerminalPage() {
   const [tab, setTab] = useState("Triage");
   const [filter, setFilter] = useState("all");
-  const [selectedId, setSelectedId] = useState(analystIncidents[0]?.id ?? null);
+  const [selectedId, setSelectedId] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [approvedActions, setApprovedActions] = useState({});
+  const [livePayload, setLivePayload] = useState(null);
+
+  useEffect(() => {
+    setLivePayload(payloadSummary(loadLiveAnalysis()));
+  }, []);
+
+  const activeIncidents = livePayload?.incidents?.length ? livePayload.incidents : analystIncidents;
 
   const filteredIncidents = useMemo(() => {
-    if (filter === "all") return analystIncidents;
-    return analystIncidents.filter((incident) => incident.severity === filter);
-  }, [filter]);
+    if (filter === "all") return activeIncidents;
+    return activeIncidents.filter((incident) => incident.severity === filter);
+  }, [activeIncidents, filter]);
+
+  useEffect(() => {
+    if (!filteredIncidents.length) {
+      setSelectedId(null);
+      return;
+    }
+    if (!selectedId || !filteredIncidents.some((incident) => incident.id === selectedId)) {
+      setSelectedId(filteredIncidents[0].id);
+    }
+  }, [filteredIncidents, selectedId]);
 
   const selectedIncident =
     filteredIncidents.find((incident) => incident.id === selectedId) ??
@@ -37,11 +55,13 @@ export default function TerminalPage() {
   }
 
   const summaryCounts = {
-    all: analystIncidents.length,
-    critical: analystIncidents.filter((incident) => incident.severity === "critical").length,
-    high: analystIncidents.filter((incident) => incident.severity === "high").length,
-    uncertain: analystIncidents.filter((incident) => incident.severity === "uncertain").length
+    all: activeIncidents.length,
+    critical: activeIncidents.filter((incident) => incident.severity === "critical").length,
+    high: activeIncidents.filter((incident) => incident.severity === "high").length,
+    uncertain: activeIncidents.filter((incident) => incident.severity === "uncertain").length
   };
+
+  const sourceFileLabel = livePayload?.fileName || "Demo SOC feed";
 
   return (
     <AppShell>
@@ -60,7 +80,7 @@ export default function TerminalPage() {
             ))}
           </div>
           <div className="terminal-status">
-            <span>SOC-Tier2 · Shift 09:00-17:00</span>
+            <span>{livePayload ? `Active file · ${sourceFileLabel}` : "SOC-Tier2 · Demo session"}</span>
             <span className="terminal-live">LIVE</span>
           </div>
         </div>
@@ -70,7 +90,7 @@ export default function TerminalPage() {
             <div className="terminal-list-head">
               <div>
                 <h3>Active Incidents</h3>
-                <p>{filteredIncidents.length} incidents</p>
+                <p>{filteredIncidents.length} incidents from {sourceFileLabel}</p>
               </div>
               <div className="terminal-summary-row">
                 <button
@@ -179,6 +199,21 @@ export default function TerminalPage() {
                 </div>
 
                 <div className="terminal-detail-scroll">
+                  {livePayload?.terminal?.length ? (
+                    <article className="terminal-section">
+                      <div className="terminal-section-head">
+                        <span>Pipeline Trace</span>
+                      </div>
+                      <div className="terminal-section-body">
+                        <div className="terminal-log-list">
+                          {livePayload.terminal.map((line) => (
+                            <code key={line}>{line}</code>
+                          ))}
+                        </div>
+                      </div>
+                    </article>
+                  ) : null}
+
                   <article className="terminal-section">
                     <div className="terminal-section-head">
                       <span>What Happened</span>
@@ -327,7 +362,7 @@ export default function TerminalPage() {
             ) : (
               <div className="terminal-empty">
                 <h3>No incidents in this filter</h3>
-                <p>Choose another severity filter or return to the monitoring dashboard.</p>
+                <p>Upload a file in Live Ingestion or choose another severity filter.</p>
               </div>
             )}
           </section>

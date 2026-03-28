@@ -5,6 +5,7 @@ import Link from "next/link";
 import AppShell from "@/components/AppShell";
 import MaterialIcon from "@/components/MaterialIcon";
 import { monitoringStats as fallbackStats, normalizedRows as fallbackRows } from "@/lib/data";
+import { saveLiveAnalysis } from "@/lib/liveAnalysis";
 
 function classificationTone(name) {
   if (name === "True Positive") return "tone-primary";
@@ -37,6 +38,7 @@ export default function MonitoringPage() {
       if (!response.ok) {
         throw new Error(data.error || "Unable to run simulation.");
       }
+      saveLiveAnalysis(data);
       setSelectedFile(data.fileName || "Simulation");
       setStats(data.stats || fallbackStats);
       setRows(data.rows || fallbackRows);
@@ -64,6 +66,7 @@ export default function MonitoringPage() {
       if (!response.ok) {
         throw new Error(data.error || "Unable to process uploaded logs.");
       }
+      saveLiveAnalysis(data);
       setStats(data.stats || fallbackStats);
       setRows(data.rows || fallbackRows);
       setTerminalLines(data.terminal || defaultTerminal);
