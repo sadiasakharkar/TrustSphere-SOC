@@ -89,7 +89,7 @@ def build_behavioral_numeric_features(event: dict[str, Any]) -> dict[str, float]
         "bytes_log": log1p(max(bytes_transferred, 0.0)),
         "source_is_internal": float(_is_internal(src_ip)),
         "dest_is_internal": float(_is_internal(dest_ip)),
-        "cross_boundary": float(src_ip and dest_ip and _is_internal(src_ip) != _is_internal(dest_ip)),
+        "cross_boundary": float(bool(src_ip and dest_ip) and _is_internal(src_ip) != _is_internal(dest_ip)),
         "is_login_path": float("/login" in request_path),
         "is_admin_path": float("/admin" in request_path or "/auth" in request_path or "/config" in request_path),
         "is_sensitive_protocol": float(protocol in {"ssh", "ftp", "rdp"}),

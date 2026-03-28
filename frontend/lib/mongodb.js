@@ -1,11 +1,5 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI;
-
-if (!MONGODB_URI) {
-  throw new Error("Please define the MONGODB_URI environment variable.");
-}
-
 const globalWithMongoose = global;
 
 let cached = globalWithMongoose.mongoose;
@@ -15,12 +9,18 @@ if (!cached) {
 }
 
 export default async function connectToDatabase() {
+  const mongoUri = process.env.MONGODB_URI;
+
+  if (!mongoUri) {
+    throw new Error("Please define the MONGODB_URI environment variable.");
+  }
+
   if (cached.conn) {
     return cached.conn;
   }
 
   if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI).then((mongooseInstance) => mongooseInstance);
+    cached.promise = mongoose.connect(mongoUri).then((mongooseInstance) => mongooseInstance);
   }
 
   try {

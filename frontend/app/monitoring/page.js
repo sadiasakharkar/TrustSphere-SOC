@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import AppShell from "@/components/AppShell";
 import MaterialIcon from "@/components/MaterialIcon";
-import { monitoringStats, normalizedRows } from "@/lib/data";
+import { monitoringStats as fallbackStats, normalizedRows as fallbackRows } from "@/lib/data";
 
 function classificationTone(name) {
   if (name === "True Positive") return "tone-primary";
@@ -12,9 +12,67 @@ function classificationTone(name) {
   return "tone-muted";
 }
 
+const defaultTerminal = [
+  "[SYSTEM] Initializing intake stream...",
+  "> Awaiting uploaded log package...",
+  "> Live ingestion pipeline ready",
+  "> Prefilter model and anomaly scorer loaded",
+];
+
 export default function MonitoringPage() {
   const fileInputRef = useRef(null);
   const [selectedFile, setSelectedFile] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [stats, setStats] = useState(fallbackStats);
+  const [rows, setRows] = useState(fallbackRows);
+  const [terminalLines, setTerminalLines] = useState(defaultTerminal);
+
+  async function handleSimulation() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/ingestion", { method: "GET" });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to run simulation.");
+      }
+      setSelectedFile(data.fileName || "Simulation");
+      setStats(data.stats || fallbackStats);
+      setRows(data.rows || fallbackRows);
+      setTerminalLines(data.terminal || defaultTerminal);
+    } catch (simulationError) {
+      setError(simulationError.message || "Unable to run simulation.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleUpload(file) {
+    if (!file) return;
+    setSelectedFile(file.name);
+    setLoading(true);
+    setError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch("/api/ingestion", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to process uploaded logs.");
+      }
+      setStats(data.stats || fallbackStats);
+      setRows(data.rows || fallbackRows);
+      setTerminalLines(data.terminal || defaultTerminal);
+    } catch (uploadError) {
+      setError(uploadError.message || "Unable to process uploaded logs.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <AppShell
@@ -25,22 +83,22 @@ export default function MonitoringPage() {
         <>
           <button
             className="secondary-button"
+            disabled={loading}
             onClick={() => fileInputRef.current?.click()}
             type="button"
           >
-            Upload Logs
+            {loading ? "Processing..." : "Upload Logs"}
           </button>
           <input
-            accept=".json,.csv,application/json,text/csv"
+            accept=".json,.csv,.xlsx,.syslog,.log,application/json,text/csv"
             className="hidden-file-input"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              setSelectedFile(file ? file.name : "");
-            }}
+            onChange={(event) => handleUpload(event.target.files?.[0])}
             ref={fileInputRef}
             type="file"
           />
-          <button className="secondary-button" type="button">Start Simulation</button>
+          <button className="secondary-button" disabled={loading} onClick={handleSimulation} type="button">
+            Start Simulation
+          </button>
           <Link className="secondary-button" href="/terminal">Terminal View</Link>
         </>
       }
@@ -52,13 +110,25 @@ export default function MonitoringPage() {
               <h3>Selected Upload</h3>
               <p>{selectedFile}</p>
             </div>
-            <span className="pill">Ready</span>
+            <span className="pill">{loading ? "Running" : "Processed"}</span>
+          </div>
+        </section>
+      ) : null}
+
+      {error ? (
+        <section className="wide-card selected-file-banner">
+          <div className="card-header compact">
+            <div>
+              <h3>Pipeline Error</h3>
+              <p>{error}</p>
+            </div>
+            <span className="pill warm">Check Input</span>
           </div>
         </section>
       ) : null}
 
       <section className="stats-grid">
-        {monitoringStats.map((stat) => (
+        {stats.map((stat) => (
           <article key={stat.label} className="stat-card" style={{ "--accent": stat.accent }}>
             <div className="stat-top">
               <span>{stat.label}</span>
@@ -78,14 +148,14 @@ export default function MonitoringPage() {
               <span>01</span>
               <div>
                 <strong>System Configuration</strong>
-                <p>Connect tenant, sources, and analyst profile.</p>
+                <p>Connected to live normalization and prefilter models.</p>
               </div>
             </div>
             <div className="journey-step active current">
               <span>02</span>
               <div>
                 <strong>Live Monitoring</strong>
-                <p>Prefiltering 3.4k events/sec across active streams.</p>
+                <p>Uploaded package is being scored by TrustSphere models.</p>
               </div>
             </div>
             <div className="journey-step">
@@ -103,11 +173,9 @@ export default function MonitoringPage() {
               <span />
               <span />
             </div>
-            <p>[SYSTEM] Initializing intake stream...</p>
-            <p>{">"} Loading se4.json [OK]</p>
-            <p>{">"} Normalizing logs... 1024/1024</p>
-            <p>{">"} Pattern match: Suspicious_PowerShell</p>
-            <p className="primary-copy">{">"} Applied prefilter policy: Default_v2</p>
+            {terminalLines.map((line) => (
+              <p key={line}>{line}</p>
+            ))}
             <p className="cursor">_</p>
           </article>
         </aside>
@@ -117,9 +185,11 @@ export default function MonitoringPage() {
         <div className="card-header">
           <div>
             <h3>Prefilter Normalization Results</h3>
-            <p>Classification-ready rows prepared for incident generation.</p>
+            <p>Classification-ready rows prepared by the live TrustSphere pipeline.</p>
           </div>
-          <button className="primary-button" type="button">Generate Incidents</button>
+          <button className="primary-button" onClick={handleSimulation} type="button">
+            Refresh Live Results
+          </button>
         </div>
         <div className="table-wrap">
           <table>
@@ -130,10 +200,12 @@ export default function MonitoringPage() {
                 <th>Status</th>
                 <th>Classification</th>
                 <th>Confidence</th>
+                <th>Anomaly</th>
+                <th>Severity</th>
               </tr>
             </thead>
             <tbody>
-              {normalizedRows.map((row) => (
+              {rows.map((row) => (
                 <tr key={row.id}>
                   <td className="mono">{row.id}</td>
                   <td>{row.source}</td>
@@ -148,6 +220,12 @@ export default function MonitoringPage() {
                       <div className="meter-fill" style={{ width: `${row.confidence}%` }} />
                     </div>
                   </td>
+                  <td>
+                    <div className="meter">
+                      <div className="meter-fill" style={{ width: `${row.anomalyScore ?? 0}%` }} />
+                    </div>
+                  </td>
+                  <td>{row.severity}</td>
                 </tr>
               ))}
             </tbody>
