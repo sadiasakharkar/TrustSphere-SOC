@@ -90,6 +90,9 @@ export default function TerminalPage() {
       "1. Incident Summary",
       incident.summary,
       "",
+      "1A. Analyst Reasoning",
+      incident.reasoning || "No additional reasoning available.",
+      "",
       "2. Evidence Panel",
       evidenceLines || "- No evidence signals recorded",
       "",
@@ -294,6 +297,16 @@ export default function TerminalPage() {
                     </div>
                     <div className="terminal-section-body">
                       <p>{selectedIncident.summary}</p>
+                    </div>
+                  </article>
+
+                  <article className="terminal-section">
+                    <div className="terminal-section-head">
+                      <span>Analyst Reasoning</span>
+                      <small>Evidence-backed explanation</small>
+                    </div>
+                    <div className="terminal-section-body">
+                      <p>{selectedIncident.reasoning}</p>
                     </div>
                   </article>
 

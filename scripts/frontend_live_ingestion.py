@@ -144,6 +144,48 @@ def _incident_summary(priority_record: dict[str, Any], file_name: str) -> str:
     )
 
 
+def _incident_reasoning(priority_record: dict[str, Any], file_name: str) -> str:
+    incident = priority_record["incident"]
+    entities = incident.get("entities", {})
+    evidence_bundle = incident.get("evidence_bundle", [])
+    actions = [str(action) for action in entities.get("actions", []) if action]
+    users = [str(user) for user in entities.get("users", []) if user]
+    src_ips = [str(value) for value in entities.get("src_ips", []) if value]
+    reasons = priority_record.get("reasons", [])
+
+    stage_clause = ""
+    if actions:
+        ordered_actions = ", then ".join(actions[:4])
+        stage_clause = f"The correlated sequence shows {ordered_actions}."
+
+    user_clause = ""
+    if users:
+        user_clause = f" The activity is centered on {users[0]}."
+
+    source_clause = ""
+    if src_ips:
+        source_clause = f" The source activity includes {src_ips[0]}."
+
+    evidence_clause = ""
+    if evidence_bundle:
+        top_event = evidence_bundle[0]
+        top_label = top_event.get("labels", {}).get("prefilter_label", "unknown")
+        top_anomaly = int(round(float((top_event.get('anomaly') or {}).get("final_score", 0.0)) * 100))
+        evidence_clause = (
+            f" The strongest supporting signal is {top_event.get('artifacts', {}).get('action') or top_event.get('event_kind', 'observed activity')}, "
+            f"which the prefilter classified as {top_label.replace('_', ' ')} with an anomaly score of {top_anomaly}%."
+        )
+
+    rationale_clause = ""
+    if reasons:
+        rationale_clause = f" TrustSphere ranked this incident highly because {', '.join(reasons[:3])}."
+
+    return (
+        f"{stage_clause}{user_clause}{source_clause}{evidence_clause}{rationale_clause} "
+        f"This reasoning is derived directly from the uploaded file {file_name} and the correlated event chain."
+    ).strip()
+
+
 def _incident_evidence(priority_record: dict[str, Any]) -> list[dict[str, Any]]:
     evidence_bundle = priority_record["incident"].get("evidence_bundle", [])
     result: list[dict[str, Any]] = []
@@ -224,6 +266,7 @@ def _serialize_priority_record(priority_record: dict[str, Any], file_name: str, 
         "environment": f"{incident.get('incident_type', 'incident')} · {file_name}",
         "time": incident.get("start_time", "Current batch"),
         "summary": _incident_summary(priority_record, file_name),
+        "reasoning": _incident_reasoning(priority_record, file_name),
         "tags": [incident.get("severity", "unknown"), priority_record.get("priority_label", "low")] + list(entities.get("actions", []))[:2],
         "sources": [
             {
