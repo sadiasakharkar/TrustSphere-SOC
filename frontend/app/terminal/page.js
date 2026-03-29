@@ -53,6 +53,78 @@ export default function TerminalPage() {
     }));
   }
 
+  function downloadPlaybook(incident) {
+    if (!incident) return;
+
+    const evidenceLines = incident.evidence
+      .map((item) => `- ${item.signal}: ${item.observation} (+${item.contribution}%)`)
+      .join("\n");
+    const riskLines = incident.riskBreakdown
+      .map((item) => `- ${item.label}: ${item.value}%`)
+      .join("\n");
+    const confidenceLines = incident.confidenceReasons
+      .map((reason) => `- ${reason}`)
+      .join("\n");
+    const stageLines = incident.stages
+      .map((stage) => `- ${stage.name}: ${stage.sub}`)
+      .join("\n");
+    const impactLines = incident.impact
+      .map((item) => `- ${item.label}: ${item.value}`)
+      .join("\n");
+    const actionLines = incident.actions
+      .map((action) => `- ${action.name} | ${action.urgency} | ${action.why}`)
+      .join("\n");
+    const sourceLines = incident.sources
+      .map((source) => `- ${source.file}: ${source.hits}/${source.events} flagged`)
+      .join("\n");
+
+    const content = [
+      "TRUSTSPHERE ANALYST PLAYBOOK",
+      "",
+      `Case ID: ${incident.id}`,
+      `Source File: ${sourceFileLabel}`,
+      `Incident: ${incident.title}`,
+      `Actor/Entity: ${incident.who}`,
+      `Environment: ${incident.environment}`,
+      "",
+      "1. Incident Summary",
+      incident.summary,
+      "",
+      "2. Evidence Panel",
+      evidenceLines || "- No evidence signals recorded",
+      "",
+      "3. Risk Score Calculation",
+      `Final Risk Score: ${incident.risk}%`,
+      riskLines || "- No risk breakdown available",
+      "",
+      "4. Confidence Level",
+      `Confidence: ${incident.confidence}%`,
+      confidenceLines || "- No confidence rationale available",
+      "",
+      "5. Attack Stage",
+      stageLines || "- No attack stages available",
+      "",
+      "6. Recommended Actions",
+      actionLines || "- No recommended actions available",
+      "",
+      "7. Business Impact Estimate",
+      impactLines || "- No business impact estimate available",
+      "",
+      "8. Source Files",
+      sourceLines || "- No source file references available",
+    ].join("\n");
+
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${incident.id.toLowerCase()}-playbook.txt`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
   const summaryCounts = {
     all: activeIncidents.length,
     critical: activeIncidents.filter((incident) => incident.severity === "critical").length,
@@ -171,6 +243,9 @@ export default function TerminalPage() {
                     </div>
                   </div>
                   <div className="terminal-detail-actions">
+                    <button className="secondary-button" onClick={() => downloadPlaybook(selectedIncident)} type="button">
+                      Download Playbook
+                    </button>
                     <button className="secondary-button" onClick={() => setModalOpen(true)} type="button">
                       View Source Files
                     </button>
