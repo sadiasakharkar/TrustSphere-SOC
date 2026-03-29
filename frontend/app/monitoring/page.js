@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import AppShell from "@/components/AppShell";
 import MaterialIcon from "@/components/MaterialIcon";
-import { monitoringStats as fallbackStats, normalizedRows as fallbackRows } from "@/lib/data";
 import { saveLiveAnalysis } from "@/lib/liveAnalysis";
 
 function classificationTone(name) {
@@ -25,8 +24,8 @@ export default function MonitoringPage() {
   const [selectedFile, setSelectedFile] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [stats, setStats] = useState(fallbackStats);
-  const [rows, setRows] = useState(fallbackRows);
+  const [stats, setStats] = useState([]);
+  const [rows, setRows] = useState([]);
   const [terminalLines, setTerminalLines] = useState(defaultTerminal);
 
   async function handleSimulation() {
@@ -40,8 +39,8 @@ export default function MonitoringPage() {
       }
       saveLiveAnalysis(data);
       setSelectedFile(data.fileName || "Simulation");
-      setStats(data.stats || fallbackStats);
-      setRows(data.rows || fallbackRows);
+      setStats(data.stats || []);
+      setRows(data.rows || []);
       setTerminalLines(data.terminal || defaultTerminal);
     } catch (simulationError) {
       setError(simulationError.message || "Unable to run simulation.");
@@ -67,8 +66,8 @@ export default function MonitoringPage() {
         throw new Error(data.error || "Unable to process uploaded logs.");
       }
       saveLiveAnalysis(data);
-      setStats(data.stats || fallbackStats);
-      setRows(data.rows || fallbackRows);
+      setStats(data.stats || []);
+      setRows(data.rows || []);
       setTerminalLines(data.terminal || defaultTerminal);
     } catch (uploadError) {
       setError(uploadError.message || "Unable to process uploaded logs.");
@@ -130,18 +129,30 @@ export default function MonitoringPage() {
         </section>
       ) : null}
 
-      <section className="stats-grid">
-        {stats.map((stat) => (
-          <article key={stat.label} className="stat-card" style={{ "--accent": stat.accent }}>
-            <div className="stat-top">
-              <span>{stat.label}</span>
-              <MaterialIcon name={stat.icon} filled className="accent-icon" />
+      {stats.length ? (
+        <section className="stats-grid">
+          {stats.map((stat) => (
+            <article key={stat.label} className="stat-card" style={{ "--accent": stat.accent }}>
+              <div className="stat-top">
+                <span>{stat.label}</span>
+                <MaterialIcon name={stat.icon} filled className="accent-icon" />
+              </div>
+              <strong>{stat.value}</strong>
+              <p>{stat.note}</p>
+            </article>
+          ))}
+        </section>
+      ) : (
+        <section className="wide-card selected-file-banner">
+          <div className="card-header compact">
+            <div>
+              <h3>No Live Analysis Yet</h3>
+              <p>Upload a log package or start a simulation to render ML-calculated prefilter metrics.</p>
             </div>
-            <strong>{stat.value}</strong>
-            <p>{stat.note}</p>
-          </article>
-        ))}
-      </section>
+            <span className="pill">Awaiting File</span>
+          </div>
+        </section>
+      )}
 
       <section className="content-grid side-only">
         <aside className="side-column">
@@ -208,29 +219,38 @@ export default function MonitoringPage() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
-                <tr key={row.id}>
-                  <td className="mono">{row.id}</td>
-                  <td>{row.source}</td>
-                  <td>{row.status}</td>
-                  <td>
-                    <span className={`table-chip ${classificationTone(row.classification)}`}>
-                      {row.classification}
-                    </span>
+              {rows.length ? (
+                rows.map((row) => (
+                  <tr key={row.id}>
+                    <td className="mono">{row.id}</td>
+                    <td>{row.source}</td>
+                    <td>{row.status}</td>
+                    <td>
+                      <span className={`table-chip ${classificationTone(row.classification)}`}>
+                        {row.classification}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="meter">
+                        <div className="meter-fill" style={{ width: `${row.confidence}%` }} />
+                      </div>
+                    </td>
+                    <td>
+                      <div className="meter">
+                        <div className="meter-fill" style={{ width: `${row.anomalyScore ?? 0}%` }} />
+                      </div>
+                    </td>
+                    <td>{row.severity}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td className="mono" colSpan="7">
+                    No real prefilter output yet. Upload a file to display normalized rows, classifications,
+                    confidence, and anomaly scores from the ML pipeline.
                   </td>
-                  <td>
-                    <div className="meter">
-                      <div className="meter-fill" style={{ width: `${row.confidence}%` }} />
-                    </div>
-                  </td>
-                  <td>
-                    <div className="meter">
-                      <div className="meter-fill" style={{ width: `${row.anomalyScore ?? 0}%` }} />
-                    </div>
-                  </td>
-                  <td>{row.severity}</td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

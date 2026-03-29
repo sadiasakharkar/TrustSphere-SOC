@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
-import { analystIncidents } from "@/lib/data";
 import { loadLiveAnalysis, payloadSummary } from "@/lib/liveAnalysis";
 
 const TABS = ["Triage", "Investigation", "Closed"];
@@ -25,7 +24,7 @@ export default function TerminalPage() {
     setLivePayload(payloadSummary(loadLiveAnalysis()));
   }, []);
 
-  const activeIncidents = livePayload?.incidents?.length ? livePayload.incidents : analystIncidents;
+  const activeIncidents = livePayload?.incidents || [];
 
   const filteredIncidents = useMemo(() => {
     if (filter === "all") return activeIncidents;
@@ -61,7 +60,7 @@ export default function TerminalPage() {
     uncertain: activeIncidents.filter((incident) => incident.severity === "uncertain").length
   };
 
-  const sourceFileLabel = livePayload?.fileName || "Demo SOC feed";
+  const sourceFileLabel = livePayload?.fileName || "No uploaded file";
 
   return (
     <AppShell>
@@ -80,7 +79,7 @@ export default function TerminalPage() {
             ))}
           </div>
           <div className="terminal-status">
-            <span>{livePayload ? `Active file · ${sourceFileLabel}` : "SOC-Tier2 · Demo session"}</span>
+            <span>{livePayload ? `Active file - ${sourceFileLabel}` : "Awaiting live ingestion analysis"}</span>
             <span className="terminal-live">LIVE</span>
           </div>
         </div>
@@ -162,7 +161,7 @@ export default function TerminalPage() {
                 <div className="terminal-detail-head">
                   <div>
                     <span className="terminal-incident-id">
-                      {selectedIncident.id} · {selectedIncident.who}
+                      {selectedIncident.id} - {selectedIncident.who}
                     </span>
                     <h2>{selectedIncident.title}</h2>
                     <div className="terminal-detail-meta">
@@ -361,8 +360,8 @@ export default function TerminalPage() {
               </>
             ) : (
               <div className="terminal-empty">
-                <h3>No incidents in this filter</h3>
-                <p>Upload a file in Live Ingestion or choose another severity filter.</p>
+                <h3>No live incidents yet</h3>
+                <p>Upload a file in Live Ingestion to render file-specific incidents, evidence, and playbook data.</p>
               </div>
             )}
           </section>
@@ -375,7 +374,7 @@ export default function TerminalPage() {
                 <div>
                   <h3>Source Files for {selectedIncident.id}</h3>
                   <p>
-                    {selectedIncident.sources.length} files ·{" "}
+                    {selectedIncident.sources.length} files -{" "}
                     {selectedIncident.sources.reduce((total, source) => total + source.events, 0)} events
                   </p>
                 </div>
