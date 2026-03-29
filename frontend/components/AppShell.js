@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import MaterialIcon from "@/components/MaterialIcon";
 import { navItems } from "@/lib/data";
 
 export default function AppShell({ eyebrow, title, description, actions, children }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [statusMessage, setStatusMessage] = useState("");
   const showHeader = title || description || eyebrow || actions;
 
   return (
@@ -18,13 +21,17 @@ export default function AppShell({ eyebrow, title, description, actions, childre
             <MaterialIcon name="search" className="muted-icon" />
             <span>Global investigation</span>
           </div>
-          <button className="icon-button" type="button">
+          <button className="icon-button" onClick={() => router.push("/terminal")} type="button">
             <MaterialIcon name="terminal" className="muted-icon" />
           </button>
-          <button className="icon-button" type="button">
+          <button
+            className="icon-button"
+            onClick={() => setStatusMessage("No new analyst notifications right now.")}
+            type="button"
+          >
             <MaterialIcon name="notifications" className="muted-icon" />
           </button>
-          <button className="avatar" type="button">
+          <button className="avatar" onClick={() => router.push("/")} type="button">
             TS
           </button>
         </div>
@@ -58,7 +65,7 @@ export default function AppShell({ eyebrow, title, description, actions, childre
         </nav>
 
         <div className="sidebar-footer">
-          <button className="primary-button full-width" type="button">
+          <button className="primary-button full-width" onClick={() => router.push("/terminal")} type="button">
             Open Analyst Terminal
           </button>
           <div className="footer-links">
@@ -69,6 +76,19 @@ export default function AppShell({ eyebrow, title, description, actions, childre
       </aside>
 
       <main className="canvas">
+        {statusMessage ? (
+          <section className="wide-card selected-file-banner">
+            <div className="card-header compact">
+              <div>
+                <h3>System Update</h3>
+                <p>{statusMessage}</p>
+              </div>
+              <button className="ghost-button" onClick={() => setStatusMessage("")} type="button">
+                Close
+              </button>
+            </div>
+          </section>
+        ) : null}
         {showHeader ? (
           <section className="page-header">
             <div>

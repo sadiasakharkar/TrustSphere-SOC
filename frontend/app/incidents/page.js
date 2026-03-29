@@ -1,16 +1,33 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import { incidents } from "@/lib/data";
 
 export default function IncidentsPage() {
+  const router = useRouter();
+  const [queue, setQueue] = useState("active");
+
+  const queueIncidents = useMemo(() => {
+    if (queue === "resolved") {
+      return incidents.filter((incident) => incident.severity === "Low");
+    }
+    if (queue === "archived") {
+      return [];
+    }
+    return incidents.filter((incident) => incident.severity !== "Low");
+  }, [queue]);
+
   return (
     <AppShell
       title="Incident Queue"
       description="Monitoring real-time threats across the infrastructure, filtered by active level 3 analyst protocols."
       actions={
         <div className="segment-control">
-          <button className="segment active" type="button">Active (12)</button>
-          <button className="segment" type="button">Resolved</button>
-          <button className="segment" type="button">Archived</button>
+          <button className={`segment ${queue === "active" ? "active" : ""}`} onClick={() => setQueue("active")} type="button">Active</button>
+          <button className={`segment ${queue === "resolved" ? "active" : ""}`} onClick={() => setQueue("resolved")} type="button">Resolved</button>
+          <button className={`segment ${queue === "archived" ? "active" : ""}`} onClick={() => setQueue("archived")} type="button">Archived</button>
         </div>
       }
     >
@@ -32,7 +49,7 @@ export default function IncidentsPage() {
       </section>
 
       <section className="incident-list">
-        {incidents.map((incident) => (
+        {queueIncidents.map((incident) => (
           <article
             key={`${incident.title}-${incident.time}`}
             className="incident-card"
@@ -51,10 +68,19 @@ export default function IncidentsPage() {
             </div>
             <div className="incident-side">
               <time>{incident.time}</time>
-              <button className="secondary-button" type="button">Investigate</button>
+              <button className="secondary-button" onClick={() => router.push("/terminal")} type="button">Investigate</button>
             </div>
           </article>
         ))}
+        {!queueIncidents.length ? (
+          <article className="incident-card" style={{ "--accent": "var(--outline)" }}>
+            <div className="incident-main">
+              <div className="severity-tag">Info</div>
+              <h3>No incidents in this queue</h3>
+              <p>The selected queue is currently empty.</p>
+            </div>
+          </article>
+        ) : null}
       </section>
     </AppShell>
   );

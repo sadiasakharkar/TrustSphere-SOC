@@ -1,14 +1,33 @@
+"use client";
+
+import { useState } from "react";
 import AppShell from "@/components/AppShell";
 import D3RiskDonut from "@/components/D3RiskDonut";
 import { bankingPlaybook } from "@/lib/data";
 
 export default function PlaybookPage() {
+  const [responseState, setResponseState] = useState("");
+
   return (
     <AppShell
       eyebrow="Analyst Response Playbook"
       title="Banking Incident Playbook"
       description={`Case ID: ${bankingPlaybook.caseId}. ${bankingPlaybook.status}.`}
     >
+      {responseState ? (
+        <section className="wide-card selected-file-banner">
+          <div className="card-header compact">
+            <div>
+              <h3>Response Queue</h3>
+              <p>{responseState}</p>
+            </div>
+            <button className="ghost-button" onClick={() => setResponseState("")} type="button">
+              Close
+            </button>
+          </div>
+        </section>
+      ) : null}
+
       <section className="playbook-grid">
         <div className="playbook-main">
           <article className="wide-card narrative-card">
@@ -184,9 +203,27 @@ export default function PlaybookPage() {
           </article>
 
           <div className="stacked-actions">
-            <button className="primary-button full-width" type="button">Approve Analyst Actions</button>
-            <button className="secondary-button full-width" type="button">Escalate for Manual Review</button>
-            <button className="ghost-button full-width" type="button">Mark as False Positive</button>
+            <button
+              className="primary-button full-width"
+              onClick={() => setResponseState("Analyst approval recorded for the recommended actions.")}
+              type="button"
+            >
+              Approve Analyst Actions
+            </button>
+            <button
+              className="secondary-button full-width"
+              onClick={() => setResponseState("Incident sent to the manual review response queue.")}
+              type="button"
+            >
+              Escalate for Manual Review
+            </button>
+            <button
+              className="ghost-button full-width"
+              onClick={() => setResponseState("False-positive review has been requested for this playbook.")}
+              type="button"
+            >
+              Mark as False Positive
+            </button>
           </div>
         </aside>
       </section>
