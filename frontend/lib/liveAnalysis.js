@@ -26,3 +26,28 @@ export function payloadSummary(payload) {
     incidents: payload.incidents || [],
   };
 }
+
+export function updateIncidentConfidence(incidentId, nextConfidence) {
+  if (typeof window === "undefined") return null;
+  const payload = loadLiveAnalysis();
+  if (!payload?.incidents?.length) return null;
+
+  const updatedPayload = {
+    ...payload,
+    incidents: payload.incidents.map((incident) =>
+      incident.id === incidentId
+        ? {
+            ...incident,
+            confidence: nextConfidence,
+            confidenceReasons: [
+              `Analyst updated confidence to ${nextConfidence}%`,
+              ...(incident.confidenceReasons || []).filter((reason) => !String(reason).startsWith("Analyst updated confidence")),
+            ],
+          }
+        : incident
+    ),
+  };
+
+  saveLiveAnalysis(updatedPayload);
+  return updatedPayload;
+}

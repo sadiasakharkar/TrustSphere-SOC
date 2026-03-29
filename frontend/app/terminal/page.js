@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
-import { loadLiveAnalysis, payloadSummary } from "@/lib/liveAnalysis";
+import { loadLiveAnalysis, payloadSummary, saveLiveAnalysis, updateIncidentConfidence } from "@/lib/liveAnalysis";
 
 const TABS = ["Triage", "Investigation", "Closed"];
 
@@ -17,7 +17,10 @@ export default function TerminalPage() {
   const [filter, setFilter] = useState("all");
   const [selectedId, setSelectedId] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [approvedActions, setApprovedActions] = useState({});
+  const [feedbackConfidence, setFeedbackConfidence] = useState("50");
+  const [feedbackStatus, setFeedbackStatus] = useState("");
   const [livePayload, setLivePayload] = useState(null);
 
   useEffect(() => {
@@ -52,6 +55,12 @@ export default function TerminalPage() {
       [`${incidentId}:${actionName}`]: true
     }));
   }
+
+  useEffect(() => {
+    if (selectedIncident) {
+      setFeedbackConfidence(String(selectedIncident.confidence ?? 50));
+    }
+  }, [selectedIncident]);
 
   function downloadPlaybook(incident) {
     if (!incident) return;
@@ -126,6 +135,63 @@ export default function TerminalPage() {
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
+  }
+
+  async function submitFeedback() {
+    if (!selectedIncident) return;
+
+    const nextConfidence = Number(feedbackConfidence);
+    if (Number.isNaN(nextConfidence) || nextConfidence < 0 || nextConfidence > 100) {
+      setFeedbackStatus("Enter a confidence score between 0 and 100.");
+      return;
+    }
+
+    setFeedbackStatus("Saving feedback...");
+    try {
+      const response = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          incidentId: selectedIncident.id,
+          title: selectedIncident.title,
+          sourceFile: sourceFileLabel,
+          originalConfidence: selectedIncident.confidence,
+          analystConfidence: nextConfidence,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to save feedback.");
+      }
+
+      const updatedPayload = updateIncidentConfidence(selectedIncident.id, nextConfidence);
+      if (updatedPayload) {
+        setLivePayload(payloadSummary(updatedPayload));
+      } else if (livePayload) {
+        const fallbackPayload = {
+          ...livePayload,
+          incidents: livePayload.incidents.map((incident) =>
+            incident.id === selectedIncident.id
+              ? {
+                  ...incident,
+                  confidence: nextConfidence,
+                  confidenceReasons: [
+                    `Analyst updated confidence to ${nextConfidence}%`,
+                    ...(incident.confidenceReasons || []),
+                  ],
+                }
+              : incident
+          ),
+        };
+        saveLiveAnalysis(fallbackPayload);
+        setLivePayload(payloadSummary(fallbackPayload));
+      }
+
+      setFeedbackStatus("Feedback saved and confidence updated.");
+      setFeedbackOpen(false);
+    } catch (error) {
+      setFeedbackStatus(error instanceof Error ? error.message : "Unable to save feedback.");
+    }
   }
 
   const summaryCounts = {
@@ -248,6 +314,9 @@ export default function TerminalPage() {
                   <div className="terminal-detail-actions">
                     <button className="secondary-button" onClick={() => downloadPlaybook(selectedIncident)} type="button">
                       Download Playbook
+                    </button>
+                    <button className="secondary-button" onClick={() => setFeedbackOpen(true)} type="button">
+                      Feedback
                     </button>
                     <button className="secondary-button" onClick={() => setModalOpen(true)} type="button">
                       View Source Files
@@ -487,6 +556,48 @@ export default function TerminalPage() {
                     </div>
                   </article>
                 ))}
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {feedbackOpen && selectedIncident ? (
+          <div className="terminal-modal-overlay" onClick={() => setFeedbackOpen(false)}>
+            <div className="terminal-modal" onClick={(event) => event.stopPropagation()}>
+              <div className="terminal-modal-head">
+                <div>
+                  <h3>Analyst Feedback for {selectedIncident.id}</h3>
+                  <p>Update the confidence score from the current ML-backed value.</p>
+                </div>
+                <button className="ghost-button" onClick={() => setFeedbackOpen(false)} type="button">
+                  Close
+                </button>
+              </div>
+              <div className="terminal-modal-body">
+                <article className="terminal-section">
+                  <div className="terminal-section-head">
+                    <span>Model Confidence</span>
+                  </div>
+                  <div className="terminal-section-body">
+                    <p>Current confidence: {selectedIncident.confidence}%</p>
+                    <label className="field">
+                      <span>Analyst Confidence Override</span>
+                      <input
+                        max="100"
+                        min="0"
+                        onChange={(event) => setFeedbackConfidence(event.target.value)}
+                        type="number"
+                        value={feedbackConfidence}
+                      />
+                    </label>
+                    {feedbackStatus ? <p>{feedbackStatus}</p> : null}
+                    <div className="stacked-actions" style={{ marginTop: "1rem" }}>
+                      <button className="primary-button full-width" onClick={submitFeedback} type="button">
+                        Save Feedback
+                      </button>
+                    </div>
+                  </div>
+                </article>
               </div>
             </div>
           </div>
