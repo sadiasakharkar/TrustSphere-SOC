@@ -1,14 +1,31 @@
+"use client";
+
+import { useState } from "react";
 import AppShell from "@/components/AppShell";
 import D3RiskDonut from "@/components/D3RiskDonut";
 import { bankingPlaybook } from "@/lib/data";
 
 export default function PlaybookPage() {
+  const [actionState, setActionState] = useState("");
+
   return (
     <AppShell
       eyebrow="Analyst Response Playbook"
       title="Banking Incident Playbook"
       description={`Case ID: ${bankingPlaybook.caseId}. ${bankingPlaybook.status}.`}
     >
+      {actionState ? (
+        <section className="wide-card selected-file-banner">
+          <div className="card-header compact">
+            <div>
+              <h3>Response Queue Updated</h3>
+              <p>{actionState}</p>
+            </div>
+            <span className="pill">Recorded</span>
+          </div>
+        </section>
+      ) : null}
+
       <section className="playbook-grid">
         <div className="playbook-main">
           <article className="wide-card narrative-card">
@@ -184,9 +201,9 @@ export default function PlaybookPage() {
           </article>
 
           <div className="stacked-actions">
-            <button className="primary-button full-width" type="button">Approve Analyst Actions</button>
-            <button className="secondary-button full-width" type="button">Escalate for Manual Review</button>
-            <button className="ghost-button full-width" type="button">Mark as False Positive</button>
+            <button className="primary-button full-width" onClick={() => setActionState("Analyst actions approved for this playbook.")} type="button">Approve Analyst Actions</button>
+            <button className="secondary-button full-width" onClick={() => setActionState("Incident escalated for manual review.")} type="button">Escalate for Manual Review</button>
+            <button className="ghost-button full-width" onClick={() => setActionState("Incident marked for false-positive review.")} type="button">Mark as False Positive</button>
           </div>
         </aside>
       </section>

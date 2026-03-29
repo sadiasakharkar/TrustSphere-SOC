@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import MaterialIcon from "@/components/MaterialIcon";
 import { navItems } from "@/lib/data";
 
 export default function AppShell({ eyebrow, title, description, actions, children }) {
   const pathname = usePathname();
+  const router = useRouter();
   const showHeader = title || description || eyebrow || actions;
 
   return (
@@ -58,7 +60,7 @@ export default function AppShell({ eyebrow, title, description, actions, childre
         </nav>
 
         <div className="sidebar-footer">
-          <button className="primary-button full-width" type="button">
+          <button className="primary-button full-width" onClick={() => router.push("/terminal")} type="button">
             Open Analyst Terminal
           </button>
           <div className="footer-links">

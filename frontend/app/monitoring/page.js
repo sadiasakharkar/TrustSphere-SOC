@@ -28,27 +28,6 @@ export default function MonitoringPage() {
   const [rows, setRows] = useState([]);
   const [terminalLines, setTerminalLines] = useState(defaultTerminal);
 
-  async function handleSimulation() {
-    setLoading(true);
-    setError("");
-    try {
-      const response = await fetch("/api/ingestion", { method: "GET" });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || "Unable to run simulation.");
-      }
-      saveLiveAnalysis(data);
-      setSelectedFile(data.fileName || "Simulation");
-      setStats(data.stats || []);
-      setRows(data.rows || []);
-      setTerminalLines(data.terminal || defaultTerminal);
-    } catch (simulationError) {
-      setError(simulationError.message || "Unable to run simulation.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   async function handleUpload(file) {
     if (!file) return;
     setSelectedFile(file.name);
@@ -98,9 +77,6 @@ export default function MonitoringPage() {
             ref={fileInputRef}
             type="file"
           />
-          <button className="secondary-button" disabled={loading} onClick={handleSimulation} type="button">
-            Start Simulation
-          </button>
           <Link className="secondary-button" href="/terminal">Terminal View</Link>
         </>
       }
@@ -147,7 +123,7 @@ export default function MonitoringPage() {
           <div className="card-header compact">
             <div>
               <h3>No Live Analysis Yet</h3>
-              <p>Upload a log package or start a simulation to render ML-calculated prefilter metrics.</p>
+              <p>Upload a log package to render ML-calculated prefilter metrics.</p>
             </div>
             <span className="pill">Awaiting File</span>
           </div>
@@ -201,8 +177,8 @@ export default function MonitoringPage() {
             <h3>Prefilter Normalization Results</h3>
             <p>Classification-ready rows prepared by the live TrustSphere pipeline.</p>
           </div>
-          <button className="primary-button" onClick={handleSimulation} type="button">
-            Refresh Live Results
+          <button className="primary-button" onClick={() => fileInputRef.current?.click()} type="button">
+            Upload Another File
           </button>
         </div>
         <div className="table-wrap">
