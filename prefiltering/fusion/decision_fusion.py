@@ -43,14 +43,18 @@ def fuse_decisions(
     )
     false_signal = false_positive_prob * 0.50
 
-    if final_score >= 0.68 and false_signal <= 0.25:
+    if rule_label == "true_positive" and (rule_score >= 65 or anomaly_score >= 0.45):
+        label = "true_positive"
+    elif rule_label == "false_positive" and rule_score <= 10 and anomaly_score < 0.35 and true_positive_prob < 0.15:
+        label = "false_positive"
+    elif final_score >= 0.68 and false_signal <= 0.25:
         label = "true_positive"
     elif false_signal >= 0.45 and anomaly_score < 0.45 and rule_label != "true_positive":
         label = "false_positive"
     else:
         label = "uncertain"
 
-    if uncertain_prob >= 0.45 and label == "true_positive":
+    if uncertain_prob >= 0.70 and label == "true_positive" and rule_label != "true_positive":
         label = "uncertain"
         reasons.append("high model uncertainty")
 

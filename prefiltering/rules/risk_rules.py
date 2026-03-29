@@ -15,6 +15,20 @@ INTERNAL_NETWORKS = (
 HIGH_RISK_PATH_MARKERS = ("/admin", "/auth", "/config", "/login", "/wp-admin")
 SCANNER_MARKERS = ("nmap", "sqlmap", "nikto", "masscan")
 SUSPICIOUS_UA_MARKERS = ("curl", "python-requests", "wget")
+HIGH_RISK_ACTION_MARKERS = (
+    "new-inboxrule",
+    "mailitemsaccessed",
+    "filedownloaded",
+    "send",
+    "powershell",
+    "cmd.exe",
+)
+RISK_EVENT_MARKERS = (
+    "suspiciousipaddress",
+    "unfamiliarfeatures",
+    "anonymousipaddress",
+    "maliciousipaddress",
+)
 
 
 @dataclass(slots=True)
@@ -55,6 +69,8 @@ def evaluate_risk_rules(event: dict[str, Any]) -> RuleEvaluation:
     action = _normalized_lower(artifacts.get("action"))
     user_agent = _normalized_lower(artifacts.get("user_agent"))
     request_path = _normalized_lower(artifacts.get("request_path"))
+    feature_map = artifacts.get("feature_map", {})
+    risk_markers = _normalized_lower(feature_map.get("RiskEventTypes"))
     bytes_transferred = artifacts.get("bytes_transferred") or 0
     try:
         bytes_numeric = int(bytes_transferred)
@@ -89,6 +105,10 @@ def evaluate_risk_rules(event: dict[str, Any]) -> RuleEvaluation:
         score -= 5
         reasons.append("allowed action")
 
+    if any(marker in action for marker in HIGH_RISK_ACTION_MARKERS):
+        score += 20
+        reasons.append("high risk action pattern")
+
     if any(marker in user_agent for marker in SCANNER_MARKERS):
         score += 20
         reasons.append("scanner-like user agent")
@@ -106,6 +126,22 @@ def evaluate_risk_rules(event: dict[str, Any]) -> RuleEvaluation:
     if src_ip and dest_ip and (_is_internal(src_ip) != _is_internal(dest_ip)):
         score += 12
         reasons.append("cross-boundary traffic")
+
+    if src_ip and not _is_internal(src_ip):
+        score += 12
+        reasons.append("external source address")
+
+    if event_kind == "identity" and "sign-in" in action and not _is_internal(src_ip):
+        score += 18
+        reasons.append("external sign-in activity")
+
+    if event_kind == "email" and any(marker in action for marker in ("new-inboxrule", "mailitemsaccessed", "send")):
+        score += 18
+        reasons.append("suspicious mailbox activity")
+
+    if any(marker in risk_markers for marker in RISK_EVENT_MARKERS):
+        score += 18
+        reasons.append("identity risk indicator")
 
     ground_truth = _normalized_lower(labels.get("ground_truth"))
     if ground_truth == "malicious":
